@@ -1,8 +1,8 @@
 {
 	"name": "android-manager",
-	"url": "https://github.com/DeveloperPorting-Stuff/android-manager",
+	"url": "https://github.com/BrenninhoTools/android-manager",
 	"license": "MIT",
-	"releasenote": "Functions for logcat, More information at CHANGELOG",
+	"releasenote": "Callbacks, file picker, device, window, audio, notifications, network and more. See CHANGELOG",
 	"tags": [
 		"android",
 		"files",
@@ -11,7 +11,7 @@
 		"manager"
 	],
 	"description": "A Haxe/Lime extension for android devices",
-	"version": "1.1.0",
+	"version": "1.2.0",
 	"contributors": [
 		"LumiCoder",
 		"StarNovaBR"

@@ -1,78 +1,83 @@
 package androidmanager.tools;
 
-#if android
-import androidmanager.jni.JNICache;
-#end
+import androidmanager.callback.Callback;
 
-/**
- * Manages native Android lifecycle events.
- */
 class Lifecycle {
+	private static var exitCallbacks:Array<Void->Void> = [];
+	private static var resumeCallbacks:Array<Void->Void> = [];
+	private static var destroyCallbacks:Array<Void->Void> = [];
+	private static var initialized:Bool = false;
 
-    private static var _exitCallbacks:Array<Void->Void> = [];
-    private static var _initialized:Bool = false;
+	public static var paused(get, never):Bool;
 
-    /**
-     * Adds functions to be executed after the application is minimized.
-     * @param callback Parameter in Void format.
-     */
-    public static function addOnExit(callback:Void->Void):Void {
-        if (callback == null) return;
-        
-        initIfNeeded();
-        
-        if (_exitCallbacks.indexOf(callback) == -1) {
-            _exitCallbacks.push(callback);
-        }
-    }
+	public static function addOnExit(callback:Void->Void):Void {
+		add(exitCallbacks, callback);
+	}
 
-    /**
-     * Remove a function from the list.
-     * @param callback Parameter in Void format.
-     */
-    public static function removeOnExit(callback:Void->Void):Void {
-        _exitCallbacks.remove(callback);
-    }
+	public static function removeOnExit(callback:Void->Void):Void {
+		exitCallbacks.remove(callback);
+	}
 
-    private static function initIfNeeded():Void {
-        if (_initialized) return;
-        _initialized = true;
+	public static function addOnResume(callback:Void->Void):Void {
+		add(resumeCallbacks, callback);
+	}
 
-        #if android
-        var func = JNICache.getStaticMethod(
-            "java/androidmanager/LifecycleManager",
-            "setExitCallback",
-            "(Lorg/haxe/lime/HaxeObject;)V"
-        );
+	public static function removeOnResume(callback:Void->Void):Void {
+		resumeCallbacks.remove(callback);
+	}
 
-        if (func != null) {
-            func(new LifecycleCallback());
-        }
-        #end
-    }
+	public static function addOnDestroy(callback:Void->Void):Void {
+		add(destroyCallbacks, callback);
+	}
 
-    public static function __dispatchExit():Void {
-        for (cb in _exitCallbacks) {
-            if (cb != null) {
-                try {
-                    cb();
-                } catch (e:Dynamic) {
-                    trace("Lifecycle exit callback failed: " + e);
-                }
-            }
-        }
-    }
-}
+	public static function removeOnDestroy(callback:Void->Void):Void {
+		destroyCallbacks.remove(callback);
+	}
 
-/**
- * Internal helper for the JNI bridge between Java and Haxe.
- */
-@:unreflective
-private class LifecycleCallback {
-    public function new() {}
+	public static function clear():Void {
+		exitCallbacks = [];
+		resumeCallbacks = [];
+		destroyCallbacks = [];
+	}
 
-    @:keep
-    public function onTrigger():Void {
-        Lifecycle.__dispatchExit();
-    }
+	private static function get_paused():Bool {
+		return Callback.paused;
+	}
+
+	private static function add(list:Array<Void->Void>, callback:Void->Void):Void {
+		if (callback == null)
+			return;
+
+		initIfNeeded();
+
+		if (list.indexOf(callback) == -1)
+			list.push(callback);
+	}
+
+	private static function initIfNeeded():Void {
+		if (initialized)
+			return;
+
+		initialized = true;
+		Callback.init();
+		Callback.onPause.add(function() run(exitCallbacks));
+		Callback.onResume.add(function() run(resumeCallbacks));
+		Callback.onDestroy.add(function() run(destroyCallbacks));
+	}
+
+	private static function run(list:Array<Void->Void>):Void {
+		for (callback in list.copy()) {
+			if (callback == null)
+				continue;
+
+			try {
+				callback();
+			} catch (e:Dynamic) {}
+		}
+	}
+
+	@:noCompletion
+	public static function __dispatchExit():Void {
+		run(exitCallbacks);
+	}
 }

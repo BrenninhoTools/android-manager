@@ -1,141 +1,226 @@
 package androidmanager.tools;
 
+import androidmanager.callback.Callback;
 #if android
 import androidmanager.jni.JNICache;
 #end
+import haxe.Json;
 
-/**
- * Utility class for managing Android permissions via JNI.
- * Allows checking and requesting runtime permissions on Android devices.
- * @see https://developer.android.com/guide/topics/permissions/overview
- */
 class PermissionUtils {
+	private static inline final CLASS:String = "java/androidmanager/PermissionManager";
 
-    #if android
-    private static var _hasPermission:Dynamic = null;
-    private static var _requestPermission:Dynamic = null;
-    private static var _hasPermissions:Dynamic = null;
-    private static var _requestPermissions:Dynamic = null;
+	public static function formatPermission(permission:String):Null<String> {
+		if (permission == null)
+			return null;
 
-    private static function formatPermission(permission:String):Null<String> {
-        if (permission == null)
-            return null;
+		permission = StringTools.trim(permission);
+		if (permission.length == 0)
+			return null;
 
-        permission = StringTools.trim(permission);
-        if (permission.length == 0)
-            return null;
+		return permission.indexOf(".") != -1 ? permission : "android.permission." + permission;
+	}
 
-        return permission.indexOf("android.permission.") == 0
-            ? permission
-            : "android.permission." + permission;
-    }
+	public static function formatPermissions(permissions:Array<String>):Array<String> {
+		var formatted:Array<String> = [];
+		if (permissions == null)
+			return formatted;
 
-    private static function formatPermissions(permissions:Array<String>):Array<String> {
-        var formatted:Array<String> = [];
-        if (permissions == null)
-            return formatted;
+		for (permission in permissions) {
+			var value = formatPermission(permission);
+			if (value != null && formatted.indexOf(value) == -1)
+				formatted.push(value);
+		}
 
-        for (permission in permissions) {
-            var formattedPermission = formatPermission(permission);
-            if (formattedPermission != null && formatted.indexOf(formattedPermission) == -1)
-                formatted.push(formattedPermission);
-        }
+		return formatted;
+	}
 
-        return formatted;
-    }
-    #end
+	public static function hasPermission(permission:String):Bool {
+		#if android
+		var value = formatPermission(permission);
+		if (value == null)
+			return false;
 
-    /**
-     * Checks whether the application has been granted a specific Android permission.
-     * @param permission The Android permission string (e.g., "android.permission.READ_EXTERNAL_STORAGE").
-     * @return `true` if the permission is granted or if the device runs an older Android version where permissions are granted at install time. Returns `false` otherwise or if a JNI error occurs.
-     */
-    public static function hasPermission(permission:String):Bool {
-        #if android
-        var formattedPermission = formatPermission(permission);
-        if (formattedPermission == null)
-            return false;
+		return JNICache.call(CLASS, "hasPermission", "(Ljava/lang/String;)Z", [value], false);
+		#else
+		return false;
+		#end
+	}
 
-        if (_hasPermission == null) {
-            try {
-                _hasPermission = JNICache.getStaticMethod("java/androidmanager/PermissionManager", "hasPermission", "(Ljava/lang/String;)Z");
-            } catch(e:Dynamic) {
-                trace("JNI ERROR (hasPermission): " + e);
-                return false;
-            }
-        }
-        return _hasPermission != null ? _hasPermission(formattedPermission) : false;
-        #else
-        return false;
-        #end
-    }
+	public static function hasPermissions(permissions:Array<String>):Bool {
+		#if android
+		var values = formatPermissions(permissions);
+		if (values.length == 0)
+			return false;
 
-    /**
-     * Triggers the native Android permission request dialog for a single permission.
-     * @param permission The Android permission string to request.
-     */
-    public static function requestPermission(permission:String):Void {
-        #if android
-        var formattedPermission = formatPermission(permission);
-        if (formattedPermission == null)
-            return;
+		return JNICache.call(CLASS, "hasPermissions", "([Ljava/lang/String;)Z", [values], false);
+		#else
+		return false;
+		#end
+	}
 
-        if (_requestPermission == null) {
-            try {
-                _requestPermission = JNICache.getStaticMethod("java/androidmanager/PermissionManager", "requestPermission", "(Ljava/lang/String;)V");
-            } catch(e:Dynamic) {
-                trace("JNI ERROR (requestPermission): " + e);
-                return;
-            }
-        }
-        if (_requestPermission != null) _requestPermission(formattedPermission);
-        #end
-    }
+	public static function requestPermission(permission:String, ?callback:PermissionsResult->Void):Void {
+		requestPermissions([permission], callback);
+	}
 
-    /**
-     * Checks whether the application has been granted a list of specific Android permissions.
-     * @param permissions An array of Android permission strings to check.
-     * @return `true` if ALL permissions in the array are granted, `false` otherwise.
-     */
-    public static function hasPermissions(permissions:Array<String>):Bool {
-        #if android
-        var formattedPermissions = formatPermissions(permissions);
-        if (formattedPermissions.length == 0)
-            return false;
+	public static function requestPermissions(permissions:Array<String>, ?callback:PermissionsResult->Void):Void {
+		var values = formatPermissions(permissions);
+		if (values.length == 0)
+			return;
 
-        if (_hasPermissions == null) {
-            try {
-                _hasPermissions = JNICache.getStaticMethod("java/androidmanager/PermissionManager", "hasPermissions", "([Ljava/lang/String;)Z");
-            } catch(e:Dynamic) {
-                trace("JNI ERROR (hasPermissions): " + e);
-                return false;
-            }
-        }
-        return _hasPermissions != null ? _hasPermissions(formattedPermissions) : false;
-        #else
-        return false;
-        #end
-    }
+		#if android
+		var requestCode:Int = Callback.nextRequestCode();
+		if (callback != null)
+			Callback.waitForPermissionsResult(requestCode, callback);
+		else
+			Callback.init();
 
-    /**
-     * Triggers the native Android permission request dialog for multiple permissions at once.
-     * @param permissions An array of Android permission strings to request.
-     */
-    public static function requestPermissions(permissions:Array<String>):Void {
-        #if android
-        var formattedPermissions = formatPermissions(permissions);
-        if (formattedPermissions.length == 0)
-            return;
+		var requested:Bool = JNICache.call(CLASS, "requestPermissionsWithCode", "([Ljava/lang/String;I)Z", [values, requestCode], false);
+		if (requested)
+			return;
 
-        if (_requestPermissions == null) {
-            try {
-                _requestPermissions = JNICache.getStaticMethod("java/androidmanager/PermissionManager", "requestPermissions", "([Ljava/lang/String;)V");
-            } catch(e:Dynamic) {
-                trace("JNI ERROR (requestPermissions): " + e);
-                return;
-            }
-        }
-        if (_requestPermissions != null) _requestPermissions(formattedPermissions);
-        #end
-    }
+		Callback.cancelWait(requestCode);
+
+		if (callback != null) {
+			var granted:Array<String> = [];
+			var denied:Array<String> = [];
+			for (value in values)
+				(hasPermission(value) ? granted : denied).push(value);
+
+			callback({
+				requestCode: requestCode,
+				granted: granted,
+				denied: denied,
+				permanentlyDenied: []
+			});
+		}
+		#else
+		if (callback != null)
+			callback({
+				requestCode: -1,
+				granted: [],
+				denied: values,
+				permanentlyDenied: []
+			});
+		#end
+	}
+
+	public static function shouldShowRationale(permission:String):Bool {
+		#if android
+		var value = formatPermission(permission);
+		return value != null && JNICache.call(CLASS, "shouldShowRationale", "(Ljava/lang/String;)Z", [value], false);
+		#else
+		return false;
+		#end
+	}
+
+	public static function getRequestedPermissions():Array<String> {
+		return parseArray(callString("getRequestedPermissions"));
+	}
+
+	public static function getGrantedPermissions():Array<String> {
+		return parseArray(callString("getGrantedPermissions"));
+	}
+
+	public static function getDeniedPermissions():Array<String> {
+		var granted = getGrantedPermissions();
+		return getRequestedPermissions().filter(function(p) return granted.indexOf(p) == -1);
+	}
+
+	public static function isExternalStorageManager():Bool {
+		return callBool("isExternalStorageManager");
+	}
+
+	public static function requestManageExternalStorage(?callback:Bool->Void):Void {
+		requestSpecial("requestManageExternalStorage", isExternalStorageManager, callback);
+	}
+
+	public static function canDrawOverlays():Bool {
+		return callBool("canDrawOverlays");
+	}
+
+	public static function requestDrawOverlays(?callback:Bool->Void):Void {
+		requestSpecial("requestDrawOverlays", canDrawOverlays, callback);
+	}
+
+	public static function canWriteSettings():Bool {
+		return callBool("canWriteSettings");
+	}
+
+	public static function requestWriteSettings(?callback:Bool->Void):Void {
+		requestSpecial("requestWriteSettings", canWriteSettings, callback);
+	}
+
+	public static function canRequestPackageInstalls():Bool {
+		return callBool("canRequestPackageInstalls");
+	}
+
+	public static function requestInstallPackages(?callback:Bool->Void):Void {
+		requestSpecial("requestInstallPackages", canRequestPackageInstalls, callback);
+	}
+
+	public static function openAppSettings(?callback:Void->Void):Void {
+		#if android
+		var requestCode = Callback.nextRequestCode();
+		if (callback != null)
+			Callback.waitForActivityResult(requestCode, function(_) callback());
+
+		JNICache.call(CLASS, "openAppSettings", "(I)Z", [requestCode], false);
+		#end
+	}
+
+	private static function requestSpecial(method:String, check:Void->Bool, ?callback:Bool->Void):Void {
+		#if android
+		if (check()) {
+			if (callback != null)
+				callback(true);
+			return;
+		}
+
+		var requestCode = Callback.nextRequestCode();
+		var finish = function() {
+			Callback.cancelWait(requestCode);
+			if (callback != null)
+				callback(check());
+		};
+
+		Callback.waitForActivityResult(requestCode, function(_) finish());
+		Callback.waitForPermissionsResult(requestCode, function(_) finish());
+
+		var started:Bool = JNICache.call(CLASS, method, "(I)Z", [requestCode], false);
+		if (!started) {
+			Callback.cancelWait(requestCode);
+			finish();
+		}
+		#else
+		if (callback != null)
+			callback(false);
+		#end
+	}
+
+	private static function callBool(method:String):Bool {
+		#if android
+		return JNICache.call(CLASS, method, "()Z", [], false);
+		#else
+		return false;
+		#end
+	}
+
+	private static function callString(method:String):String {
+		#if android
+		return JNICache.call(CLASS, method, "()Ljava/lang/String;", [], "[]");
+		#else
+		return "[]";
+		#end
+	}
+
+	private static function parseArray(content:String):Array<String> {
+		try {
+			var result:Array<String> = Json.parse(content);
+			return result != null ? result : [];
+		} catch (e:Dynamic) {
+			return [];
+		}
+	}
 }
+
+typedef PermissionsResult = androidmanager.callback.Callback.PermissionsResult;

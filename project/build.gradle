@@ -3,7 +3,7 @@ plugins {
 }
 
 android {
-    namespace 'org.lime.extension.androidtools'
+    namespace 'androidmanager'
     compileSdkVersion 33 
 
     defaultConfig {

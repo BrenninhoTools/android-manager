@@ -24,5 +24,6 @@
 	<config:android permission="android.permission.READ_MEDIA_AUDIO"/>
 	<config:android permission="android.permission.READ_MEDIA_VIDEO"/>
 	<config:android permission="android.permission.READ_MEDIA_DOCUMENTS" />
+	<config:android permission="android.permission.POST_NOTIFICATIONS" />
 	
 </project>

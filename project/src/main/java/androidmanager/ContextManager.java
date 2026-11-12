@@ -39,6 +39,12 @@ public class ContextManager {
             return formatFileArray(dirs);
         }
 
+        public static String getExternalFilesDir(String type) {
+            if (Extension.mainActivity == null) return null;
+            File dir = Extension.mainActivity.getExternalFilesDir((type == null || type.isEmpty()) ? null : type);
+            return dir != null ? dir.getAbsolutePath() : null;
+        }
+
         public static String getExternalFilesDirs(String type) {
             if (Extension.mainActivity == null) return "";
             File[] dirs = Extension.mainActivity.getExternalFilesDirs((type == null || type.isEmpty()) ? null : type);

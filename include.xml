@@ -7,5 +7,12 @@
 	<section if="android">
 		<java path="project/src/main/java" />
 		<dependency name="androidx.core:core:1.9.0" />
+
+		<config:android extension="java.androidmanager.CallbackManager" />
+
+		<section unless="ANDROID_MANAGER_NO_PERMISSIONS">
+			<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
+			<config:android permission="android.permission.VIBRATE" />
+		</section>
 	</section>
 </extension>
