@@ -35,7 +35,7 @@ typedef NotificationOptions = {
 }
 
 class Notification {
-	private static inline final CLASS:String = "java/androidmanager/Notifications";
+	private static inline final CLASS:String = "androidmanager/Notifications";
 
 	public static var enabled(get, never):Bool;
 

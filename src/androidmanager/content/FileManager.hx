@@ -24,7 +24,7 @@ typedef DocumentEntry = {
 }
 
 class FileManager {
-	private static inline final CLASS:String = "java/androidmanager/FileManager";
+	private static inline final CLASS:String = "androidmanager/FileManager";
 
 	public static function pickFile(callback:Array<String>->Void, ?mimeTypes:Array<String>, multiple:Bool = false):Void {
 		var requestCode = Callback.nextRequestCode();

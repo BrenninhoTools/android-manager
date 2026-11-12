@@ -34,7 +34,7 @@ enum abstract HapticFeedback(Int) from Int to Int {
 }
 
 class Vibrator {
-	private static inline final CLASS:String = "java/androidmanager/Vibration";
+	private static inline final CLASS:String = "androidmanager/Vibration";
 
 	public static var hasVibrator(get, never):Bool;
 	public static var hasAmplitudeControl(get, never):Bool;

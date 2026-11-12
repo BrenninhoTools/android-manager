@@ -61,7 +61,7 @@ enum abstract ThermalStatus(Int) from Int to Int {
 }
 
 class Device {
-	private static inline final CLASS:String = "java/androidmanager/Device";
+	private static inline final CLASS:String = "androidmanager/Device";
 
 	private static var rootedCache:Null<Bool> = null;
 	private static var emulatorCache:Null<Bool> = null;

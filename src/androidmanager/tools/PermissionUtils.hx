@@ -7,7 +7,7 @@ import androidmanager.jni.JNICache;
 import haxe.Json;
 
 class PermissionUtils {
-	private static inline final CLASS:String = "java/androidmanager/PermissionManager";
+	private static inline final CLASS:String = "androidmanager/PermissionManager";
 
 	public static function formatPermission(permission:String):Null<String> {
 		if (permission == null)

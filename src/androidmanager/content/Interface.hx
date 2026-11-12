@@ -55,7 +55,7 @@ typedef StyledToastOptions = {
 }
 
 class Interface {
-	private static inline final CLASS:String = "java/androidmanager/Interface";
+	private static inline final CLASS:String = "androidmanager/Interface";
 
 	public static function showToast(msg:String):Void
 		invoke("showToast", "(Ljava/lang/String;)V", [msg]);

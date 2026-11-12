@@ -22,7 +22,7 @@ typedef AppInfo = {
 }
 
 class Application {
-	private static inline final CLASS:String = "java/androidmanager/AppManager";
+	private static inline final CLASS:String = "androidmanager/AppManager";
 
 	public static var info(get, never):Null<AppInfo>;
 	public static var installer(get, never):String;

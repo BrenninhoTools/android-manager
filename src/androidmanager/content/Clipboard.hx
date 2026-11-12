@@ -5,7 +5,7 @@ import androidmanager.jni.JNICache;
 #end
 
 class Clipboard {
-	private static inline final CLASS:String = "java/androidmanager/Clipboard";
+	private static inline final CLASS:String = "androidmanager/Clipboard";
 
 	public static var text(get, set):String;
 	public static var hasText(get, never):Bool;

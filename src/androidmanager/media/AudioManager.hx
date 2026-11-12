@@ -64,7 +64,7 @@ typedef AudioDevice = {
 }
 
 class AudioManager {
-	private static inline final CLASS:String = "java/androidmanager/Audio";
+	private static inline final CLASS:String = "androidmanager/Audio";
 
 	public static var onFocusChange(default, null):Event<AudioFocus->Void> = new Event<AudioFocus->Void>();
 

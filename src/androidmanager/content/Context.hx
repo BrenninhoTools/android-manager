@@ -17,7 +17,7 @@ class Context {
     public static var internalFilesDir(get, never):Null<String>;
     private static function get_internalFilesDir():Null<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getInternalFilesDir", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getInternalFilesDir", "()Ljava/lang/String;");
         return func != null ? func() : null;
         #else
         return null;
@@ -30,7 +30,7 @@ class Context {
     public static var cacheDir(get, never):Null<String>;
     private static function get_cacheDir():Null<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getCacheDir", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getCacheDir", "()Ljava/lang/String;");
         return func != null ? func() : null;
         #else
         return null;
@@ -44,7 +44,7 @@ class Context {
     public static var obbDir(get, never):Null<String>;
     private static function get_obbDir():Null<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getObbDir", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getObbDir", "()Ljava/lang/String;");
         return func != null ? func() : null;
         #else
         return null;
@@ -69,7 +69,7 @@ class Context {
     public static var externalStorageAvailable(get, never):Bool;
     private static function get_externalStorageAvailable():Bool {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "isExternalStorageAvailable", "()Z");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "isExternalStorageAvailable", "()Z");
         return func != null ? func() : false;
         #else
         return false;
@@ -83,7 +83,7 @@ class Context {
     public static var dataDir(get, never):String;
     private static function get_dataDir():String {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getDataDir", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getDataDir", "()Ljava/lang/String;");
         return func != null ? func() : "";
         #else
         return "";
@@ -97,7 +97,7 @@ class Context {
     public static var codeCacheDir(get, never):String;
     private static function get_codeCacheDir():String {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getCodeCacheDir", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getCodeCacheDir", "()Ljava/lang/String;");
         return func != null ? func() : "";
         #else
         return "";
@@ -111,7 +111,7 @@ class Context {
     public static var noBackupFilesDir(get, never):String;
     private static function get_noBackupFilesDir():String {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getNoBackupFilesDir", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getNoBackupFilesDir", "()Ljava/lang/String;");
         return func != null ? func() : "";
         #else
         return "";
@@ -124,7 +124,7 @@ class Context {
     public static var externalCacheDirs(get, never):Array<String>;
     private static function get_externalCacheDirs():Array<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getExternalCacheDirs", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getExternalCacheDirs", "()Ljava/lang/String;");
         var res:String = func != null ? func() : "";
         return res == "" ? [] : res.split(";");
         #else
@@ -139,7 +139,7 @@ class Context {
      */
     public static function getExternalFilesDir(type:String = null):Null<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getExternalFilesDir", "(Ljava/lang/String;)Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getExternalFilesDir", "(Ljava/lang/String;)Ljava/lang/String;");
         if (func != null) {
             var path:Null<String> = func(type == null ? "" : type);
             if (path != null) return path;
@@ -156,7 +156,7 @@ class Context {
      */
     public static function getDatabasePath(name:String):String {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getDatabasePath", "(Ljava/lang/String;)Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getDatabasePath", "(Ljava/lang/String;)Ljava/lang/String;");
         return func != null ? func(name) : "";
         #else
         return "";
@@ -169,7 +169,7 @@ class Context {
      */
     public static function getFileStreamPath(name:String):String {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getFileStreamPath", "(Ljava/lang/String;)Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getFileStreamPath", "(Ljava/lang/String;)Ljava/lang/String;");
         return func != null ? func(name) : "";
         #else
         return "";
@@ -182,7 +182,7 @@ class Context {
      */
     public static function getExternalFilesDirs(type:String):Array<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$Storage", "getExternalFilesDirs", "(Ljava/lang/String;)Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getExternalFilesDirs", "(Ljava/lang/String;)Ljava/lang/String;");
         var res:String = func != null ? func(type) : "";
         return res == "" ? [] : res.split(";");
         #else
@@ -203,7 +203,7 @@ class App {
     public static var packageName(get, never):String;
     private static function get_packageName():String {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/ContextManager$App", "getPackageName", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/ContextManager$App", "getPackageName", "()Ljava/lang/String;");
         return func != null ? func() : "Unknown";
         #else
         return "Unknown";

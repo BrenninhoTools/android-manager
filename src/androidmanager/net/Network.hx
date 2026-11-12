@@ -23,7 +23,7 @@ typedef NetworkStatus = {
 }
 
 class Network {
-	private static inline final CLASS:String = "java/androidmanager/Network";
+	private static inline final CLASS:String = "androidmanager/Network";
 
 	public static var onChange(default, null):Event<NetworkStatus->Void> = new Event<NetworkStatus->Void>();
 

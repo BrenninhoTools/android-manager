@@ -1,4 +1,4 @@
-package java.androidmanager;
+package androidmanager;
 
 import android.app.Notification;
 import android.app.NotificationChannel;

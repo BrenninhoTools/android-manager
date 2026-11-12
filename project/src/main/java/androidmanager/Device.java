@@ -1,4 +1,4 @@
-package java.androidmanager;
+package androidmanager;
 
 import android.app.ActivityManager;
 import android.app.UiModeManager;

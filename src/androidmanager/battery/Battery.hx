@@ -99,10 +99,10 @@ class Battery {
         if (_initialized)
             return;
 
-        var initFunc = JNICache.getStaticMethod("java/androidmanager/Battery", "init", "()V");
+        var initFunc = JNICache.getStaticMethod("androidmanager/Battery", "init", "()V");
         if (initFunc != null) initFunc();
 
-        var setCallbackFunc = JNICache.getStaticMethod("java/androidmanager/Battery", "setCallback", "(Lorg/haxe/lime/HaxeObject;)V");
+        var setCallbackFunc = JNICache.getStaticMethod("androidmanager/Battery", "setCallback", "(Lorg/haxe/lime/HaxeObject;)V");
         if (setCallbackFunc != null) setCallbackFunc(_callbackObj);
 
         _initialized = true;
@@ -115,7 +115,7 @@ class Battery {
      */
     public static function getLevel():Int {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getLevel", "()I");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getLevel", "()I");
         return func != null ? func() : -1;
         #else
         return -1;
@@ -128,7 +128,7 @@ class Battery {
      */
     public static function getStatus():BatteryStatus {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getStatus", "()I");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getStatus", "()I");
         return func != null ? cast func() : Unknown;
         #else
         return Unknown;
@@ -141,7 +141,7 @@ class Battery {
      */
     public static function getHealth():BatteryHealth {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getHealth", "()I");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getHealth", "()I");
         return func != null ? cast func() : Unknown;
         #else
         return Unknown;
@@ -154,7 +154,7 @@ class Battery {
      */
     public static function getPlugged():BatteryPlugged {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getPlugged", "()I");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getPlugged", "()I");
         return func != null ? cast func() : Unplugged;
         #else
         return Unplugged;
@@ -167,7 +167,7 @@ class Battery {
      */
     public static function getTemperature():Float {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getTemperature", "()F");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getTemperature", "()F");
         return func != null ? func() : -1;
         #else
         return -1;
@@ -180,7 +180,7 @@ class Battery {
      */
     public static function getVoltage():Int {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getVoltage", "()I");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getVoltage", "()I");
         return func != null ? func() : -1;
         #else
         return -1;
@@ -193,7 +193,7 @@ class Battery {
      */
     public static function getTechnology():Null<String> {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getTechnology", "()Ljava/lang/String;");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getTechnology", "()Ljava/lang/String;");
         return func != null ? cast func() : null;
         #else
         return null;
@@ -206,7 +206,7 @@ class Battery {
      */
     public static function isCharging():Bool {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "isCharging", "()Z");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "isCharging", "()Z");
         return func != null ? func() : false;
         #else
         return false;
@@ -220,7 +220,7 @@ class Battery {
      */
     public static function isLow():Bool {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "isLow", "()Z");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "isLow", "()Z");
         return func != null ? func() : false;
         #else
         return false;
@@ -233,7 +233,7 @@ class Battery {
      */
     public static function isPowerSaveMode():Bool {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "isPowerSaveMode", "()Z");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "isPowerSaveMode", "()Z");
         return func != null ? func() : false;
         #else
         return false;
@@ -247,7 +247,7 @@ class Battery {
      */
     public static function getChargeTimeRemaining():Int {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "getChargeTimeRemaining", "()J");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "getChargeTimeRemaining", "()J");
         return func != null ? cast func() : -1;
         #else
         return -1;
@@ -277,7 +277,7 @@ class Battery {
      */
     public static function startListening():Void {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "startListening", "()V");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "startListening", "()V");
         if (func != null) func();
         #end
     }
@@ -287,7 +287,7 @@ class Battery {
      */
     public static function stopListening():Void {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "stopListening", "()V");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "stopListening", "()V");
         if (func != null) func();
         #end
     }
@@ -298,7 +298,7 @@ class Battery {
      */
     public static function isListening():Bool {
         #if android
-        var func = JNICache.getStaticMethod("java/androidmanager/Battery", "isListening", "()Z");
+        var func = JNICache.getStaticMethod("androidmanager/Battery", "isListening", "()Z");
         return func != null ? func() : false;
         #else
         return false;

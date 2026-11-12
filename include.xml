@@ -8,7 +8,7 @@
 		<java path="project/src/main/java" />
 		<dependency name="androidx.core:core:1.9.0" />
 
-		<config:android extension="java.androidmanager.CallbackManager" />
+		<config:android extension="androidmanager.CallbackManager" />
 
 		<section unless="ANDROID_MANAGER_NO_PERMISSIONS">
 			<config:android permission="android.permission.ACCESS_NETWORK_STATE" />

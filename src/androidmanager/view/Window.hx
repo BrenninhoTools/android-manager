@@ -30,7 +30,7 @@ enum abstract ConfigurationOrientation(Int) from Int to Int {
 }
 
 class Window {
-	private static inline final CLASS:String = "java/androidmanager/WindowManager";
+	private static inline final CLASS:String = "androidmanager/WindowManager";
 
 	public static var secure(get, set):Bool;
 	public static var keepScreenOn(get, set):Bool;

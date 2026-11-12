@@ -58,7 +58,7 @@ enum abstract TrimMemoryLevel(Int) from Int to Int {
 }
 
 class Callback {
-	private static inline final CLASS:String = "java/androidmanager/CallbackManager";
+	private static inline final CLASS:String = "androidmanager/CallbackManager";
 
 	public static var onActivityResult(default, null):Event<ActivityResult->Void> = new Event<ActivityResult->Void>();
 	public static var onRequestPermissionsResult(default, null):Event<PermissionsResult->Void> = new Event<PermissionsResult->Void>();

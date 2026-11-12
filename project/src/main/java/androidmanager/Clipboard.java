@@ -1,4 +1,4 @@
-package java.androidmanager;
+package androidmanager;
 
 import android.content.ClipData;
 import android.content.ClipDescription;

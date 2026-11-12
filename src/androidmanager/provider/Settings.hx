@@ -36,7 +36,7 @@ enum abstract SettingsAction(String) from String to String {
 }
 
 class Settings {
-	private static inline final CLASS:String = "java/androidmanager/SettingsManager";
+	private static inline final CLASS:String = "androidmanager/SettingsManager";
 
 	public static function getString(name:String, table:SettingsTable = SYSTEM):Null<String>
 		return invoke("getString", "(ILjava/lang/String;)Ljava/lang/String;", [table, name], null);

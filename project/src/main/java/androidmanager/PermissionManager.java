@@ -1,4 +1,4 @@
-package java.androidmanager;
+package androidmanager;
 
 import android.content.Context;
 import android.content.Intent;
