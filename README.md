@@ -45,6 +45,7 @@ Great, now you can use the library!
 | `androidmanager.content.Clipboard` | Read and write the clipboard |
 | `androidmanager.net.Network` | Connection status, type, metered and change events |
 | `androidmanager.games.PlayGames` | Google Play Games v2: sign in, player info and avatar, achievements, leaderboards, events, saved games |
+| `androidmanager.view.Screenshot` | Screenshots to file, gallery, base64 or `Image`, crop, scale, share and screenshot detection |
 | `androidmanager.provider.Settings` | Read system/secure/global settings and open settings screens |
 | `androidmanager.os.Build`, `androidmanager.os.Environment`, `androidmanager.content.Context`, `androidmanager.battery.Battery` | Build info, directories, logcat and battery |
 
@@ -139,6 +140,41 @@ Window.captureScreen(Context.getExternalFilesDir() + "/screenshot.png", function
 ```
 
 Immersive mode is reapplied automatically when the window regains focus (`Window.autoReapplyImmersive`).
+
+## Audio
+
+```haxe
+AudioManager.autoHandle(
+	function() FlxG.sound.pause(),
+	function() FlxG.sound.resume(),
+	function(volume) FlxG.sound.volume = volume
+);
+
+AudioManager.onVolumeChange.add(function(stream, volume, max) volumeBar.value = volume / max);
+AudioManager.onDeviceConnected.add(function(device) Interface.makeToast(device.name + " connected"));
+AudioManager.onHeadphonesChange.add(function(connected) useHeadphoneMix(connected));
+
+var info = AudioManager.info;
+var latency = AudioManager.outputLatency;
+```
+
+`autoHandle` requests audio focus, makes the volume buttons control the game volume, pauses on focus loss, calls and when headphones are unplugged, resumes after transient losses and ducks the volume when another app plays a short sound.
+
+## Screenshot
+
+```haxe
+Screenshot.capture();
+Screenshot.capture(Context.getExternalFilesDir() + "/shot.jpg", {quality: 90, maxSize: 1280, sound: true});
+Screenshot.saveToGallery({album: "My Game"}, function(uri, ?error) {});
+Screenshot.captureAndShare("Share your score");
+Screenshot.captureImage({scale: 0.25}, function(image, ?error) if (image != null) preview.pixels = BitmapData.fromImage(image));
+
+Screenshot.onUserScreenshot.add(function() Interface.makeToast("Screenshot detected"));
+Screenshot.startDetection();
+Screenshot.blocked = true;
+```
+
+Options: `format` (png, jpg, webp), `quality`, `scale`, `maxSize`, crop with `x`, `y`, `width` and `height`, `gallery`, `album`, `fileName`, `base64`, `sound` and `delay` in milliseconds. Detecting screenshots taken by the player requires Android 14+.
 
 ## Example
 

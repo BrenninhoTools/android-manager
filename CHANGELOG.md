@@ -14,6 +14,8 @@ Changelog
 - Added `Application` (app info, launch packages, open URLs, share, store page, custom intents, restart and exit)
 - Added `Notification` with channels, priorities, progress and permission request
 - Added `AudioManager` with volume control, audio focus events and output device info
+- `AudioManager` gained volume, device, headphones, becoming noisy, ringer and mode events, focus helpers (`onShouldPause`, `onShouldResume`, `onDuck`, `autoHandle`), detailed devices, latency and low latency info, spatial audio, mute, volume buttons stream and system sound effects
+- Added `Screenshot` with file, gallery, base64 and `Image` output, crop, scale, formats, delay, shutter sound, sharing and Android 14 screenshot detection
 - Added `Vibrator` with patterns, amplitudes, predefined effects and haptic feedback
 - Added `PlayGames` (Google Play Games Services v2) with sign in, server side access, player info and avatar, achievements, leaderboards, events and saved games, enabled with `PLAY_GAMES_APP_ID`
 - `PlayGames` connection modes (`auto`, `silent`, `manual`) with state events, automatic prompt limits, remembered declines and silent re-check on resume

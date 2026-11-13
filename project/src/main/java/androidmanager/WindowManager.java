@@ -7,19 +7,13 @@ import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager.LayoutParams;
-import android.graphics.Bitmap;
 import android.graphics.Insets;
-import android.os.Handler;
-import android.os.HandlerThread;
 import android.os.Looper;
 import android.util.Log;
 import android.view.Display;
-import android.view.PixelCopy;
 import android.view.SurfaceView;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
-import java.io.File;
-import java.io.FileOutputStream;
 import org.haxe.extension.Extension;
 import org.haxe.lime.HaxeObject;
 import org.json.JSONArray;
@@ -665,59 +659,5 @@ public class WindowManager {
             if (imm != null && view != null)
                 imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         });
-    }
-
-    public static void captureScreen(final String path, final HaxeObject callback) {
-        final View view = Extension.mainView;
-        if (Build.VERSION.SDK_INT < 24 || !(view instanceof SurfaceView) || view.getWidth() <= 0 || view.getHeight() <= 0) {
-            respondCapture(callback, false, "Screen capture is not supported");
-            return;
-        }
-
-        Utils.runOnUi(() -> {
-            final Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
-            final HandlerThread thread = new HandlerThread("AndroidManager-Capture");
-            thread.start();
-
-            PixelCopy.request((SurfaceView) view, bitmap, new PixelCopy.OnPixelCopyFinishedListener() {
-                @Override
-                public void onPixelCopyFinished(int result) {
-                    try {
-                        if (result != PixelCopy.SUCCESS) {
-                            respondCapture(callback, false, "PixelCopy failed: " + result);
-                            return;
-                        }
-
-                        File file = new File(path);
-                        File parent = file.getParentFile();
-                        if (parent != null && !parent.exists())
-                            parent.mkdirs();
-
-                        boolean jpeg = path.toLowerCase().endsWith(".jpg") || path.toLowerCase().endsWith(".jpeg");
-                        FileOutputStream out = new FileOutputStream(file);
-                        bitmap.compress(jpeg ? Bitmap.CompressFormat.JPEG : Bitmap.CompressFormat.PNG, 95, out);
-                        out.flush();
-                        out.close();
-                        respondCapture(callback, true, file.getAbsolutePath());
-                    } catch (Exception e) {
-                        respondCapture(callback, false, e.toString());
-                    } finally {
-                        bitmap.recycle();
-                        thread.quitSafely();
-                    }
-                }
-            }, new Handler(thread.getLooper()));
-        });
-    }
-
-    private static void respondCapture(HaxeObject callback, boolean success, String data) {
-        if (callback == null)
-            return;
-
-        try {
-            callback.call("onResult", new Object[]{ success, data });
-        } catch (Exception e) {
-            Log.e("AndroidManager", e.toString());
-        }
     }
 }

@@ -165,12 +165,10 @@ class Window {
 		invoke("hideKeyboard", "()V", []);
 
 	public static function captureScreen(path:String, ?callback:(path:Null<String>, ?error:String) -> Void):Void {
-		#if android
-		invoke("captureScreen", "(Ljava/lang/String;Lorg/haxe/lime/HaxeObject;)V", [path, new CaptureHandler(callback)]);
-		#else
-		if (callback != null)
-			callback(null, "Screen capture is only available on Android");
-		#end
+		androidmanager.view.Screenshot.capture(path, null, function(result, ?error) {
+			if (callback != null)
+				callback(result != null ? result.path : null, error);
+		});
 	}
 
 	public static function getSafeArea():Insets {
@@ -344,19 +342,4 @@ private class WindowHandler #if (lime >= "8.0.0") implements lime.system.JNI.JNI
 	}
 }
 
-@:noCompletion
-private class CaptureHandler #if (lime >= "8.0.0") implements lime.system.JNI.JNISafety #end {
-	private var callback:(Null<String>, ?String) -> Void;
-
-	public function new(callback:(Null<String>, ?String) -> Void) {
-		this.callback = callback;
-	}
-
-	@:keep
-	#if (lime >= "8.0.0") @:runOnMainThread #end
-	public function onResult(success:Bool, data:String):Void {
-		if (callback != null)
-			callback(success ? data : null, success ? null : data);
-	}
-}
 #end

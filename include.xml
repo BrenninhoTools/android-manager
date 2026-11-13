@@ -19,6 +19,7 @@
 		<section unless="ANDROID_MANAGER_NO_PERMISSIONS">
 			<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
 			<config:android permission="android.permission.VIBRATE" />
+			<config:android permission="android.permission.DETECT_SCREEN_CAPTURE" />
 		</section>
 	</section>
 </extension>
