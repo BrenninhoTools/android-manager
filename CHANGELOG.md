@@ -15,6 +15,7 @@ Changelog
 - Added `Notification` with channels, priorities, progress and permission request
 - Added `AudioManager` with volume control, audio focus events and output device info
 - Added `Vibrator` with patterns, amplitudes, predefined effects and haptic feedback
+- Added `PlayGames` (Google Play Games Services v2) with sign in, server side access, player info and avatar, achievements, leaderboards, events and saved games, enabled with `PLAY_GAMES_APP_ID`
 - Added `Clipboard`
 - Added `Network` with connection type and change listener
 - Added `FileManager` using the Storage Access Framework (pick files and folders, create documents, copy to and from URIs, list and copy folders)

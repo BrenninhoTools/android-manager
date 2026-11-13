@@ -10,6 +10,12 @@
 
 		<config:android extension="androidmanager.CallbackManager" />
 
+		<section if="PLAY_GAMES_APP_ID">
+			<dependency name="android-manager-playgames" path="dependencies/playgames" />
+			<config:android extension="androidmanager.PlayGamesManager" />
+			<config:android permission="android.permission.INTERNET" />
+		</section>
+
 		<section unless="ANDROID_MANAGER_NO_PERMISSIONS">
 			<config:android permission="android.permission.ACCESS_NETWORK_STATE" />
 			<config:android permission="android.permission.VIBRATE" />

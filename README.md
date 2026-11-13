@@ -44,8 +44,39 @@ Great, now you can use the library!
 | `androidmanager.content.Interface` | Toasts, alerts, confirm, input, list, single/multi choice and progress dialogs |
 | `androidmanager.content.Clipboard` | Read and write the clipboard |
 | `androidmanager.net.Network` | Connection status, type, metered and change events |
+| `androidmanager.games.PlayGames` | Google Play Games v2: sign in, player info and avatar, achievements, leaderboards, events, saved games |
 | `androidmanager.provider.Settings` | Read system/secure/global settings and open settings screens |
 | `androidmanager.os.Build`, `androidmanager.os.Environment`, `androidmanager.content.Context`, `androidmanager.battery.Battery` | Build info, directories, logcat and battery |
+
+## Google Play Games
+
+Play Games Services v2 is optional. Enable it by setting your Play Games app ID before including the library:
+
+```xml
+<set name="PLAY_GAMES_APP_ID" value="123456789012" />
+<config:android minimum-sdk-version="23" />
+<haxelib name="android-manager" />
+```
+
+Optionally pin the SDK version with `<set name="PLAY_GAMES_VERSION" value="22.1.0" />`.
+
+```haxe
+PlayGames.init(function(signedIn) {
+	if (!signedIn)
+		PlayGames.signIn();
+});
+
+PlayGames.onSignInChanged.add(function(signedIn) {
+	if (signedIn)
+		PlayGames.getCurrentPlayer(function(player, ?error) Interface.showToast("Hi, " + player.displayName));
+});
+
+PlayGames.unlockAchievement("CgkI...");
+PlayGames.submitScore("CgkI...", 15000);
+PlayGames.showLeaderboard("CgkI...");
+PlayGames.saveGame("slot1", Json.stringify(save), "Week 3");
+PlayGames.loadGame("slot1", function(data, ?error) if (data != null) save = Json.parse(data));
+```
 
 ## Example
 
