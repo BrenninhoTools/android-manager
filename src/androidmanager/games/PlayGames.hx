@@ -77,12 +77,34 @@ enum abstract PopupGravity(Int) from Int to Int {
 	var BOTTOM_RIGHT = 85;
 }
 
+enum abstract ConnectionMode(Int) from Int to Int {
+	var AUTO = 0;
+	var MANUAL = 1;
+	var SILENT = 2;
+}
+
+enum abstract ConnectionState(Int) from Int to Int {
+	var DISCONNECTED = 0;
+	var CONNECTING = 1;
+	var CONNECTED = 2;
+	var FAILED = 3;
+}
+
 class PlayGames {
 	private static inline final CLASS:String = "androidmanager/PlayGamesManager";
 	private static inline final HAXE_OBJECT:String = "Lorg/haxe/lime/HaxeObject;";
 	private static inline final STRING:String = "Ljava/lang/String;";
 
 	public static var onSignInChanged(default, null):Event<Bool->Void> = new Event<Bool->Void>();
+	public static var onStateChange(default, null):Event<(ConnectionState, Null<PlayGamesError>) -> Void> = new Event<(ConnectionState, Null<PlayGamesError>) -> Void>();
+
+	public static var mode(get, set):ConnectionMode;
+	public static var state(get, never):ConnectionState;
+	public static var declined(get, never):Bool;
+	public static var lastError(get, never):Null<PlayGamesError>;
+	public static var maxAutoPrompts(default, set):Int = 1;
+	public static var rememberDecline(default, set):Bool = true;
+	public static var checkOnResume(default, set):Bool = true;
 
 	public static var available(get, never):Bool;
 	public static var signedIn(get, never):Bool;
@@ -98,22 +120,54 @@ class PlayGames {
 			return;
 		}
 
-		if (!listening) {
-			listening = true;
-			JNICache.call(CLASS, "setListener", '($HAXE_OBJECT)V', [new AuthListener()]);
-		}
+		listen();
 
-		checkAuthentication(function(ok) {
-			if (ok)
+		switch (state) {
+			case CONNECTED:
 				refreshPlayer();
-			if (onReady != null)
-				onReady(ok);
-		});
+				if (onReady != null)
+					onReady(true);
+			case CONNECTING:
+				var waiter:(ConnectionState, Null<PlayGamesError>) -> Void = null;
+				waiter = function(value, _) {
+					if (value == CONNECTING)
+						return;
+
+					onStateChange.remove(waiter);
+					if (onReady != null)
+						onReady(value == CONNECTED);
+				};
+				onStateChange.add(waiter);
+			default:
+				checkAuthentication(function(ok) {
+					if (ok)
+						refreshPlayer();
+					if (onReady != null)
+						onReady(ok);
+				});
+		}
 		#else
 		if (onReady != null)
 			onReady(false);
 		#end
 	}
+
+	public static function connect(?callback:(signedIn:Bool, ?error:PlayGamesError) -> Void):Void {
+		listen();
+		request("connect", '($HAXE_OBJECT)V', [], function(ok, data) {
+			var success = ok && data == "true";
+			if (callback != null)
+				callback(success, ok ? null : parseError(data));
+		});
+	}
+
+	public static function autoConnect():Void {
+		listen();
+		call("autoConnect", "()V", []);
+	}
+
+	public static function resetDeclined():Void
+		call("resetDeclined", "()V", []);
 
 	public static function checkAuthentication(?callback:Bool->Void):Void {
 		request("checkAuthentication", '($HAXE_OBJECT)V', [], function(ok, data) {
@@ -125,8 +179,6 @@ class PlayGames {
 	public static function signIn(?callback:(signedIn:Bool, ?error:PlayGamesError) -> Void):Void {
 		request("signIn", '($HAXE_OBJECT)V', [], function(ok, data) {
 			var success = ok && data == "true";
-			if (success)
-				refreshPlayer();
 			if (callback != null)
 				callback(success, ok ? null : parseError(data));
 		});
@@ -270,6 +322,66 @@ class PlayGames {
 	}
 
 	@:noCompletion
+	public static function __stateChanged(value:Int, error:String):Void {
+		if (value == CONNECTED)
+			refreshPlayer();
+
+		onStateChange.dispatch(value, error != null && error.length > 0 ? parseError(error) : null);
+	}
+
+	private static function listen():Void {
+		#if android
+		if (listening || !available)
+			return;
+
+		listening = true;
+		call("setListener", '($HAXE_OBJECT)V', [new AuthListener()]);
+		#end
+	}
+
+	private static function call(method:String, signature:String, args:Array<Dynamic>, ?fallback:Dynamic):Dynamic {
+		#if android
+		return JNICache.call(CLASS, method, signature, args, fallback);
+		#else
+		return fallback;
+		#end
+	}
+
+	private static function get_mode():ConnectionMode
+		return call("getMode", "()I", [], AUTO);
+
+	private static function set_mode(value:ConnectionMode):ConnectionMode {
+		call("setMode", "(I)V", [value]);
+		return value;
+	}
+
+	private static function get_state():ConnectionState
+		return call("getState", "()I", [], DISCONNECTED);
+
+	private static function get_declined():Bool
+		return call("isDeclined", "()Z", [], false);
+
+	private static function get_lastError():Null<PlayGamesError> {
+		var value:String = call("getLastError", "()Ljava/lang/String;", [], "");
+		return value != null && value.length > 0 ? parseError(value) : null;
+	}
+
+	private static function set_maxAutoPrompts(value:Int):Int {
+		call("setMaxAutoPrompts", "(I)V", [value]);
+		return maxAutoPrompts = value;
+	}
+
+	private static function set_rememberDecline(value:Bool):Bool {
+		call("setRememberDecline", "(Z)V", [value]);
+		return rememberDecline = value;
+	}
+
+	private static function set_checkOnResume(value:Bool):Bool {
+		call("setCheckOnResume", "(Z)V", [value]);
+		return checkOnResume = value;
+	}
+
+	@:noCompletion
 	public static function __authChanged(value:Bool):Void {
 		if (!value)
 			player = null;
@@ -381,6 +493,12 @@ private class AuthListener #if (lime >= "8.0.0") implements lime.system.JNI.JNIS
 	#if (lime >= "8.0.0") @:runOnMainThread #end
 	public function onAuthChanged(value:Bool):Void {
 		PlayGames.__authChanged(value);
+	}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onStateChanged(value:Int, error:String):Void {
+		PlayGames.__stateChanged(value, error);
 	}
 }
 #end

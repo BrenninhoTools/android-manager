@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="android_manager_play_games_app_id" translatable="false">::SET_PLAY_GAMES_APP_ID::</string>
+	<string name="android_manager_play_games_sign_in" translatable="false">::if (SET_PLAY_GAMES_SIGN_IN)::::SET_PLAY_GAMES_SIGN_IN::::else::auto::end::</string>
+	<string name="android_manager_play_games_auto_prompts" translatable="false">::if (SET_PLAY_GAMES_AUTO_PROMPTS)::::SET_PLAY_GAMES_AUTO_PROMPTS::::else::1::end::</string>
 </resources>

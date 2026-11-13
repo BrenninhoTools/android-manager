@@ -3,305 +3,404 @@ package androidmanager.battery;
 #if android
 import androidmanager.jni.JNICache;
 #end
+import haxe.Json;
+import lime.app.Event;
 
-/**
- * Provides access to the device's battery information and charging status.
- * @see https://developer.android.com/reference/android/os/BatteryManager
- */
-enum abstract BatteryStatus(Int) to Int {
-    var Unknown = 1;
-    var Charging = 2;
-    var Discharging = 3;
-    var NotCharging = 4;
-    var Full = 5;
+enum abstract BatteryStatus(Int) from Int to Int {
+	var Unknown = 1;
+	var Charging = 2;
+	var Discharging = 3;
+	var NotCharging = 4;
+	var Full = 5;
 }
 
-/**
- * Represents the health state of the battery.
- */
-enum abstract BatteryHealth(Int) to Int {
-    var Unknown = 1;
-    var Good = 2;
-    var Overheat = 3;
-    var Dead = 4;
-    var OverVoltage = 5;
-    var UnspecifiedFailure = 6;
-    var Cold = 7;
+enum abstract BatteryHealth(Int) from Int to Int {
+	var Unknown = 1;
+	var Good = 2;
+	var Overheat = 3;
+	var Dead = 4;
+	var OverVoltage = 5;
+	var UnspecifiedFailure = 6;
+	var Cold = 7;
 }
 
-/**
- * Represents the type of power source the device is currently plugged into.
- */
-enum abstract BatteryPlugged(Int) to Int {
-    var Unplugged = 0;
-    var AC = 1;
-    var USB = 2;
-    var Wireless = 4;
+enum abstract BatteryPlugged(Int) from Int to Int {
+	var Unplugged = 0;
+	var AC = 1;
+	var USB = 2;
+	var Wireless = 4;
+	var Dock = 8;
 }
 
-/**
- * A snapshot containing the complete state of the battery at a specific moment.
- */
+enum abstract ChargeType(String) from String to String {
+	var None = "none";
+	var AC = "ac";
+	var USB = "usb";
+	var Wireless = "wireless";
+	var Dock = "dock";
+}
+
+enum abstract ThermalStatus(Int) from Int to Int {
+	var Unsupported = -1;
+	var None = 0;
+	var Light = 1;
+	var Moderate = 2;
+	var Severe = 3;
+	var Critical = 4;
+	var Emergency = 5;
+	var Shutdown = 6;
+}
+
 typedef BatteryInfo = {
-    var level:Int;
-    var status:BatteryStatus;
-    var health:BatteryHealth;
-    var plugged:BatteryPlugged;
-    var temperature:Float;
-    var charging:Bool;
-    var low:Bool;
-    var powerSave:Bool;
+	var level:Int;
+	var status:BatteryStatus;
+	var health:BatteryHealth;
+	var plugged:BatteryPlugged;
+	var temperature:Float;
+	var charging:Bool;
+	var low:Bool;
+	var powerSave:Bool;
 }
 
-/**
- * Provides access to the device's battery information and charging status.
- */
+typedef BatteryDetails = {
+	> BatteryInfo,
+	var levelPrecise:Float;
+	var chargeType:ChargeType;
+	var voltage:Int;
+	var technology:String;
+	var present:Bool;
+	var full:Bool;
+	var deviceIdle:Bool;
+	var ignoringOptimizations:Bool;
+	var currentNow:Float;
+	var currentAverage:Float;
+	var chargeCounter:Float;
+	var energyCounter:Float;
+	var powerWatts:Float;
+	var designCapacity:Float;
+	var estimatedCapacity:Float;
+	var cycleCount:Int;
+	var chargeTimeRemaining:Float;
+	var dischargeTimeRemaining:Float;
+	var thermalStatus:ThermalStatus;
+}
+
+private typedef LevelAlert = {
+	var level:Int;
+	var callback:Int->Void;
+	var triggered:Bool;
+	var repeat:Bool;
+}
+
 class Battery {
+	private static inline final CLASS:String = "androidmanager/Battery";
 
-    /**
-     * Callback triggered whenever the battery state changes (e.g., level drops or charger is plugged).
-     * Must call `startListening()` to activate.
-     */
-    public static var onBatteryChanged:(info:BatteryInfo)->Void = null;
+	public static var onBatteryChanged:(info:BatteryInfo) -> Void = null;
 
-    #if android
-    private static var _initialized:Bool = false;
+	public static var onChange(default, null):Event<BatteryDetails->Void> = new Event<BatteryDetails->Void>();
+	public static var onLevelChange(default, null):Event<Int->Void> = new Event<Int->Void>();
+	public static var onChargingChange(default, null):Event<Bool->Void> = new Event<Bool->Void>();
+	public static var onPowerConnected(default, null):Event<Bool->Void> = new Event<Bool->Void>();
+	public static var onLow(default, null):Event<Bool->Void> = new Event<Bool->Void>();
+	public static var onPowerSaveChange(default, null):Event<Bool->Void> = new Event<Bool->Void>();
+	public static var onDeviceIdleChange(default, null):Event<Bool->Void> = new Event<Bool->Void>();
+	public static var onThermalChange(default, null):Event<ThermalStatus->Void> = new Event<ThermalStatus->Void>();
+	public static var onOverheat(default, null):Event<Float->Void> = new Event<Float->Void>();
 
-    // The HaxeObject passed to Java to receive the real-time callback events
-    private static var _callbackObj = {
-        onBatteryChanged: function(
-            level:Int, status:Int, health:Int, plugged:Int,
-            temperature:Float, charging:Bool, low:Bool, powerSave:Bool
-        ):Void {
-            if (Battery.onBatteryChanged == null)
-                return;
+	public static var overheatTemperature:Float = 42;
+	public static var last(default, null):Null<BatteryDetails> = null;
 
-            Battery.onBatteryChanged({
-                level: level,
-                status: cast status,
-                health: cast health,
-                plugged: cast plugged,
-                temperature: temperature,
-                charging: charging,
-                low: low,
-                powerSave: powerSave
-            });
-        }
-    };
-    #end
+	public static var level(get, never):Int;
+	public static var levelPrecise(get, never):Float;
+	public static var charging(get, never):Bool;
+	public static var powerSave(get, never):Bool;
+	public static var temperature(get, never):Float;
+	public static var thermalStatus(get, never):ThermalStatus;
+	public static var details(get, never):Null<BatteryDetails>;
 
-    /**
-     * Initializes the Battery Manager JNI bridge.
-     * This is required before starting the listener, but optional for single method calls.
-     */
-    public static function init():Void {
-        #if android
-        if (_initialized)
-            return;
+	private static var alerts:Array<LevelAlert> = [];
+	private static var initialized:Bool = false;
+	private static var overheated:Bool = false;
 
-        var initFunc = JNICache.getStaticMethod("androidmanager/Battery", "init", "()V");
-        if (initFunc != null) initFunc();
+	public static function init():Void {
+		#if android
+		if (initialized)
+			return;
 
-        var setCallbackFunc = JNICache.getStaticMethod("androidmanager/Battery", "setCallback", "(Lorg/haxe/lime/HaxeObject;)V");
-        if (setCallbackFunc != null) setCallbackFunc(_callbackObj);
+		initialized = true;
+		call("setCallback", "(Lorg/haxe/lime/HaxeObject;)V", [new BatteryHandler()]);
+		#end
+	}
 
-        _initialized = true;
-        #end
-    }
+	public static function getLevel():Int
+		return call("getLevel", "()I", [], -1);
 
-    /**
-     * Returns the current battery level as an integer.
-     * @return Battery percentage from 0 to 100, or -1 if unavailable.
-     */
-    public static function getLevel():Int {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getLevel", "()I");
-        return func != null ? func() : -1;
-        #else
-        return -1;
-        #end
-    }
+	public static function getStatus():BatteryStatus
+		return call("getStatus", "()I", [], 1);
 
-    /**
-     * Returns the current charging status of the device.
-     * @return A `BatteryStatus` enum value.
-     */
-    public static function getStatus():BatteryStatus {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getStatus", "()I");
-        return func != null ? cast func() : Unknown;
-        #else
-        return Unknown;
-        #end
-    }
+	public static function getHealth():BatteryHealth
+		return call("getHealth", "()I", [], 1);
 
-    /**
-     * Returns the current health condition of the battery.
-     * @return A `BatteryHealth` enum value.
-     */
-    public static function getHealth():BatteryHealth {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getHealth", "()I");
-        return func != null ? cast func() : Unknown;
-        #else
-        return Unknown;
-        #end
-    }
+	public static function getPlugged():BatteryPlugged
+		return call("getPlugged", "()I", [], 0);
 
-    /**
-     * Returns the type of power source the device is currently plugged into.
-     * @return A `BatteryPlugged` enum value.
-     */
-    public static function getPlugged():BatteryPlugged {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getPlugged", "()I");
-        return func != null ? cast func() : Unplugged;
-        #else
-        return Unplugged;
-        #end
-    }
+	public static function getChargeType():ChargeType
+		return call("getChargeType", "()Ljava/lang/String;", [], "none");
 
-    /**
-     * Returns the current battery temperature.
-     * @return The temperature in degrees Celsius (°C).
-     */
-    public static function getTemperature():Float {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getTemperature", "()F");
-        return func != null ? func() : -1;
-        #else
-        return -1;
-        #end
-    }
+	public static function getTemperature():Float
+		return call("getTemperature", "()F", [], -1.0);
 
-    /**
-     * Returns the current battery voltage.
-     * @return The voltage in millivolts (mV).
-     */
-    public static function getVoltage():Int {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getVoltage", "()I");
-        return func != null ? func() : -1;
-        #else
-        return -1;
-        #end
-    }
+	public static function getVoltage():Int
+		return call("getVoltage", "()I", [], -1);
 
-    /**
-     * Returns the technology of the current battery (e.g., "Li-ion").
-     * @return The battery technology as a string, or null if unknown.
-     */
-    public static function getTechnology():Null<String> {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getTechnology", "()Ljava/lang/String;");
-        return func != null ? cast func() : null;
-        #else
-        return null;
-        #end
-    }
+	public static function getTechnology():Null<String>
+		return call("getTechnology", "()Ljava/lang/String;", [], null);
 
-    /**
-     * Checks whether the device is currently connected to a power source and charging.
-     * @return True if charging or full, false otherwise.
-     */
-    public static function isCharging():Bool {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "isCharging", "()Z");
-        return func != null ? func() : false;
-        #else
-        return false;
-        #end
-    }
+	public static function isCharging():Bool
+		return call("isCharging", "()Z", [], false);
 
-    /**
-     * Checks whether the battery level is critically low (typically 15% or less) 
-     * or if the device is in idle mode.
-     * @return True if the battery is low, false otherwise.
-     */
-    public static function isLow():Bool {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "isLow", "()Z");
-        return func != null ? func() : false;
-        #else
-        return false;
-        #end
-    }
+	public static function isLow():Bool
+		return call("isLow", "()Z", [], false);
 
-    /**
-     * Checks whether the device is currently in power save (battery saver) mode.
-     * @return True if power save mode is enabled, false otherwise.
-     */
-    public static function isPowerSaveMode():Bool {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "isPowerSaveMode", "()Z");
-        return func != null ? func() : false;
-        #else
-        return false;
-        #end
-    }
+	public static function isPowerSaveMode():Bool
+		return call("isPowerSaveMode", "()Z", [], false);
 
-    /**
-     * Returns the estimated time remaining until the battery is fully charged.
-     * Requires API level 28+ (Android 9).
-     * @return Time remaining in milliseconds, or -1 if the device is not charging or unable to compute.
-     */
-    public static function getChargeTimeRemaining():Int {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "getChargeTimeRemaining", "()J");
-        return func != null ? cast func() : -1;
-        #else
-        return -1;
-        #end
-    }
+	public static function isDeviceIdle():Bool
+		return call("isDeviceIdle", "()Z", [], false);
 
-    /**
-     * Collects and returns a snapshot containing all primary battery information at the current moment.
-     * @return A `BatteryInfo` object with the current state.
-     */
-    public static function getSnapshot():BatteryInfo {
-        return {
-            level: getLevel(),
-            status: getStatus(),
-            health: getHealth(),
-            plugged: getPlugged(),
-            temperature: getTemperature(),
-            charging: isCharging(),
-            low: isLow(),
-            powerSave: isPowerSaveMode()
-        };
-    }
+	public static function isIgnoringBatteryOptimizations():Bool
+		return call("isIgnoringBatteryOptimizations", "()Z", [], true);
 
-    /**
-     * Registers a broadcast receiver to listen for real-time battery changes.
-     * Triggers the `onBatteryChanged` callback.
-     */
-    public static function startListening():Void {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "startListening", "()V");
-        if (func != null) func();
-        #end
-    }
+	public static function getCurrentNow():Float
+		return call("getCurrentNow", "()D", [], 0.0);
 
-    /**
-     * Unregisters the broadcast receiver, stopping real-time battery updates.
-     */
-    public static function stopListening():Void {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "stopListening", "()V");
-        if (func != null) func();
-        #end
-    }
+	public static function getCurrentAverage():Float
+		return call("getCurrentAverage", "()D", [], 0.0);
 
-    /**
-     * Checks whether the application is currently listening for real-time battery events.
-     * @return True if the listener is active, false otherwise.
-     */
-    public static function isListening():Bool {
-        #if android
-        var func = JNICache.getStaticMethod("androidmanager/Battery", "isListening", "()Z");
-        return func != null ? func() : false;
-        #else
-        return false;
-        #end
-    }
+	public static function getChargeCounter():Float
+		return call("getChargeCounter", "()D", [], -1.0);
+
+	public static function getEnergyCounter():Float
+		return call("getEnergyCounter", "()D", [], -1.0);
+
+	public static function getDesignCapacity():Float
+		return call("getDesignCapacity", "()D", [], -1.0);
+
+	public static function getEstimatedCapacity():Float
+		return call("getEstimatedCapacity", "()D", [], -1.0);
+
+	public static function getHealthPercent():Float {
+		var design = getDesignCapacity();
+		var estimated = getEstimatedCapacity();
+		if (design <= 0 || estimated <= 0)
+			return -1;
+
+		return Math.min(100, estimated / design * 100);
+	}
+
+	public static function getCycleCount():Int
+		return call("getCycleCount", "()I", [], -1);
+
+	public static function getChargeTimeRemaining():Float
+		return call("getChargeTimeRemainingMs", "()D", [], -1.0);
+
+	public static function getDischargeTimeRemaining():Float
+		return call("getDischargeTimeRemaining", "()D", [], -1.0);
+
+	public static function getThermalHeadroom(forecastSeconds:Int = 0):Float
+		return call("getThermalHeadroom", "(I)F", [forecastSeconds], -1.0);
+
+	public static function getSnapshot():BatteryInfo {
+		var info = getDetails();
+		if (info != null)
+			return info;
+
+		return {
+			level: getLevel(),
+			status: getStatus(),
+			health: getHealth(),
+			plugged: getPlugged(),
+			temperature: getTemperature(),
+			charging: isCharging(),
+			low: isLow(),
+			powerSave: isPowerSaveMode()
+		};
+	}
+
+	public static function getDetails():Null<BatteryDetails> {
+		var content:String = call("getInfo", "()Ljava/lang/String;", [], null);
+		if (content == null)
+			return null;
+
+		try {
+			return Json.parse(content);
+		} catch (e:Dynamic) {
+			return null;
+		}
+	}
+
+	public static function startListening():Void {
+		#if android
+		init();
+		call("startListening", "()V", []);
+		#end
+	}
+
+	public static function stopListening():Void
+		call("stopListening", "()V", []);
+
+	public static function isListening():Bool
+		return call("isListening", "()Z", [], false);
+
+	public static function addLevelAlert(level:Int, callback:Int->Void, repeat:Bool = true):Void {
+		if (callback == null)
+			return;
+
+		alerts.push({level: level, callback: callback, triggered: false, repeat: repeat});
+		startListening();
+	}
+
+	public static function removeLevelAlert(callback:Int->Void):Void {
+		for (alert in alerts.copy())
+			if (Reflect.compareMethods(alert.callback, callback))
+				alerts.remove(alert);
+	}
+
+	public static function clearLevelAlerts():Void
+		alerts = [];
+
+	public static function openBatteryOptimizationSettings():Bool
+		return call("openBatteryOptimizationSettings", "()Z", [], false);
+
+	public static function openBatteryUsage():Bool
+		return call("openBatteryUsage", "()Z", [], false);
+
+	public static function openBatterySaverSettings():Bool
+		return call("openBatterySaverSettings", "()Z", [], false);
+
+	@:noCompletion
+	public static function __info(content:String):Void {
+		var info:BatteryDetails = null;
+		try {
+			info = Json.parse(content);
+		} catch (e:Dynamic) {}
+
+		if (info == null)
+			return;
+
+		var previous = last;
+		last = info;
+
+		var levelChanged = previous == null || previous.level != info.level;
+		var chargingChanged = previous == null || previous.charging != info.charging;
+
+		if (levelChanged)
+			onLevelChange.dispatch(info.level);
+
+		if (chargingChanged)
+			onChargingChange.dispatch(info.charging);
+
+		if (levelChanged || chargingChanged)
+			checkAlerts(info.level, info.charging);
+
+		if (info.temperature >= overheatTemperature && !overheated) {
+			overheated = true;
+			onOverheat.dispatch(info.temperature);
+		} else if (info.temperature < overheatTemperature - 2) {
+			overheated = false;
+		}
+
+		onChange.dispatch(info);
+
+		if (onBatteryChanged != null)
+			onBatteryChanged(info);
+	}
+
+	private static function checkAlerts(current:Int, isCharging:Bool):Void {
+		for (alert in alerts.copy()) {
+			if (current > alert.level || isCharging) {
+				alert.triggered = false;
+				continue;
+			}
+
+			if (!alert.triggered) {
+				alert.triggered = true;
+				alert.callback(current);
+				if (!alert.repeat)
+					alerts.remove(alert);
+			}
+		}
+	}
+
+	private static function get_level():Int
+		return last != null ? last.level : getLevel();
+
+	private static function get_levelPrecise():Float
+		return call("getLevelPrecise", "()D", [], -1.0);
+
+	private static function get_charging():Bool
+		return last != null ? last.charging : isCharging();
+
+	private static function get_powerSave():Bool
+		return isPowerSaveMode();
+
+	private static function get_temperature():Float
+		return getTemperature();
+
+	private static function get_thermalStatus():ThermalStatus
+		return call("getThermalStatus", "()I", [], -1);
+
+	private static function get_details():Null<BatteryDetails>
+		return getDetails();
+
+	private static function call(method:String, signature:String, args:Array<Dynamic>, ?fallback:Dynamic):Dynamic {
+		#if android
+		return JNICache.call(CLASS, method, signature, args, fallback);
+		#else
+		return fallback;
+		#end
+	}
 }
+
+#if android
+@:noCompletion
+private class BatteryHandler #if (lime >= "8.0.0") implements lime.system.JNI.JNISafety #end {
+	public function new() {}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onBatteryInfo(content:String):Void {
+		Battery.__info(content);
+	}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onPowerConnected(connected:Bool):Void {
+		Battery.onPowerConnected.dispatch(connected);
+	}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onBatteryLow(low:Bool):Void {
+		Battery.onLow.dispatch(low);
+	}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onPowerSaveChanged(enabled:Bool):Void {
+		Battery.onPowerSaveChange.dispatch(enabled);
+	}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onDeviceIdleChanged(idle:Bool):Void {
+		Battery.onDeviceIdleChange.dispatch(idle);
+	}
+
+	@:keep
+	#if (lime >= "8.0.0") @:runOnMainThread #end
+	public function onThermalChanged(status:Int):Void {
+		Battery.onThermalChange.dispatch(status);
+	}
+}
+#end

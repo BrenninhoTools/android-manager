@@ -16,6 +16,9 @@ Changelog
 - Added `AudioManager` with volume control, audio focus events and output device info
 - Added `Vibrator` with patterns, amplitudes, predefined effects and haptic feedback
 - Added `PlayGames` (Google Play Games Services v2) with sign in, server side access, player info and avatar, achievements, leaderboards, events and saved games, enabled with `PLAY_GAMES_APP_ID`
+- `PlayGames` connection modes (`auto`, `silent`, `manual`) with state events, automatic prompt limits, remembered declines and silent re-check on resume
+- `Battery` rewritten: typed events (level, charging, power connected, low, power save, doze, thermal, overheat), level alerts, current, watts, capacity, health percent, cycle count, time to full and empty, thermal headroom and battery settings shortcuts
+- `Window` gained resize, orientation, focus, insets and keyboard events, safe area, separate system bar control, light bars, edge to edge, show when locked, display modes, high refresh rate, surface frame rate, color mode, keyboard control and screen capture
 - Added `Clipboard`
 - Added `Network` with connection type and change listener
 - Added `FileManager` using the Storage Access Framework (pick files and folders, create documents, copy to and from URIs, list and copy folders)

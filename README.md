@@ -60,6 +60,33 @@ Play Games Services v2 is optional. Enable it by setting your Play Games app ID 
 
 Optionally pin the SDK version with `<set name="PLAY_GAMES_VERSION" value="22.1.0" />`.
 
+### Connection modes
+
+| `PLAY_GAMES_SIGN_IN` | Behavior at startup |
+| --- | --- |
+| `auto` (default) | Checks the silent sign in, and if the player is not signed in shows the sign in prompt automatically |
+| `silent` | Only checks the silent sign in, never shows a prompt |
+| `manual` | Does nothing until you call `PlayGames.connect()` |
+
+```xml
+<set name="PLAY_GAMES_SIGN_IN" value="auto" />
+<set name="PLAY_GAMES_AUTO_PROMPTS" value="1" />
+```
+
+If the player cancels the automatic prompt, it is not shown again on the next launches (`PlayGames.rememberDecline`), but `PlayGames.connect()` always works and clears that. The connection is checked again silently every time the game comes back from the background (`PlayGames.checkOnResume`).
+
+```haxe
+PlayGames.onStateChange.add(function(state, error) {
+	switch (state) {
+		case CONNECTED: signInButton.visible = false;
+		case FAILED | DISCONNECTED: signInButton.visible = true;
+		default:
+	}
+});
+
+signInButton.onClick = function() PlayGames.connect();
+```
+
 ```haxe
 PlayGames.init(function(signedIn) {
 	if (!signedIn)
@@ -77,6 +104,41 @@ PlayGames.showLeaderboard("CgkI...");
 PlayGames.saveGame("slot1", Json.stringify(save), "Week 3");
 PlayGames.loadGame("slot1", function(data, ?error) if (data != null) save = Json.parse(data));
 ```
+
+## Battery
+
+```haxe
+Battery.onChange.add(function(info) {
+	batteryText.text = info.level + "% " + info.chargeType + " " + info.temperature + "C " + info.powerWatts + "W";
+});
+Battery.onPowerConnected.add(function(connected) Interface.makeToast(connected ? "Charging" : "Unplugged"));
+Battery.onThermalChange.add(function(status) if (status >= Severe) FlxG.updateFramerate = 30);
+Battery.addLevelAlert(15, function(level) Interface.showToast("Battery at " + level + "%"));
+Battery.startListening();
+
+var health = Battery.getHealthPercent();
+var cycles = Battery.getCycleCount();
+```
+
+`getDetails()` returns level with decimals, status, health, charge type, temperature, voltage, current (now and average), power in watts, charge and energy counters, design and estimated capacity, cycle count (Android 14+), time to full, time to empty (Android 12+), thermal status, power save and doze state.
+
+## Window
+
+```haxe
+Window.immersive = true;
+Window.setHighRefreshRate(true);
+Window.setLayoutInCutout(true);
+
+Window.onResize.add(function(width, height) resizeGame(width, height));
+Window.onKeyboardChange.add(function(visible, height) moveTextField(visible ? height : 0));
+Window.onFocusChange.add(function(focused) if (!focused) pauseGame());
+Window.startListening();
+
+var safe = Window.getSafeArea();
+Window.captureScreen(Context.getExternalFilesDir() + "/screenshot.png", function(path, ?error) {});
+```
+
+Immersive mode is reapplied automatically when the window regains focus (`Window.autoReapplyImmersive`).
 
 ## Example
 

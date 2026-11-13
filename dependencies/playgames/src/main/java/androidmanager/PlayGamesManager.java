@@ -3,6 +3,7 @@ package androidmanager;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
@@ -44,9 +45,30 @@ public class PlayGamesManager extends Extension {
 
     private static final String TAG = "AndroidManager";
 
+    public static final int MODE_AUTO = 0;
+    public static final int MODE_MANUAL = 1;
+    public static final int MODE_SILENT = 2;
+
+    public static final int STATE_DISCONNECTED = 0;
+    public static final int STATE_CONNECTING = 1;
+    public static final int STATE_CONNECTED = 2;
+    public static final int STATE_FAILED = 3;
+
+    private static final String PREFS = "android_manager_play_games";
+
     private static boolean initialized = false;
     private static boolean authenticated = false;
     private static HaxeObject listener = null;
+
+    private static int mode = MODE_AUTO;
+    private static int state = STATE_DISCONNECTED;
+    private static String lastError = "";
+    private static int maxAutoPrompts = 1;
+    private static int autoPrompts = 0;
+    private static boolean busy = false;
+    private static boolean firstResume = true;
+    private static boolean rememberDecline = true;
+    private static boolean checkOnResume = true;
 
     private static Activity activity() {
         return Extension.mainActivity;
@@ -145,6 +167,215 @@ public class PlayGamesManager extends Extension {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         init();
+        loadConfig();
+    }
+
+    @Override
+    public void onResume() {
+        if (busy || activity() == null)
+            return;
+
+        if (firstResume) {
+            firstResume = false;
+            autoConnect();
+        } else if (!authenticated && checkOnResume) {
+            silentCheck(null);
+        }
+    }
+
+    private static int resourceInt(String name, int fallback) {
+        try {
+            String value = resourceString(name);
+            return value == null || value.isEmpty() ? fallback : Integer.parseInt(value.trim());
+        } catch (Exception e) {
+            return fallback;
+        }
+    }
+
+    private static String resourceString(String name) {
+        Context ctx = Extension.mainContext != null ? Extension.mainContext : activity();
+        if (ctx == null)
+            return null;
+
+        int id = ctx.getResources().getIdentifier(name, "string", ctx.getPackageName());
+        return id != 0 ? ctx.getString(id) : null;
+    }
+
+    private static void loadConfig() {
+        String value = resourceString("android_manager_play_games_sign_in");
+        if (value != null) {
+            value = value.trim().toLowerCase();
+            if (value.equals("manual"))
+                mode = MODE_MANUAL;
+            else if (value.equals("silent"))
+                mode = MODE_SILENT;
+            else
+                mode = MODE_AUTO;
+        }
+
+        maxAutoPrompts = resourceInt("android_manager_play_games_auto_prompts", 1);
+    }
+
+    private static SharedPreferences prefs() {
+        Context ctx = Extension.mainContext != null ? Extension.mainContext : activity();
+        return ctx != null ? ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE) : null;
+    }
+
+    public static boolean isDeclined() {
+        SharedPreferences p = prefs();
+        return p != null && p.getBoolean("declined", false);
+    }
+
+    private static void setDeclined(boolean value) {
+        SharedPreferences p = prefs();
+        if (p != null)
+            p.edit().putBoolean("declined", value).apply();
+    }
+
+    public static void resetDeclined() {
+        setDeclined(false);
+        autoPrompts = 0;
+    }
+
+    public static void setMode(int value) {
+        mode = value;
+    }
+
+    public static int getMode() {
+        return mode;
+    }
+
+    public static int getState() {
+        return state;
+    }
+
+    public static String getLastError() {
+        return lastError;
+    }
+
+    public static void setMaxAutoPrompts(int value) {
+        maxAutoPrompts = value;
+    }
+
+    public static void setRememberDecline(boolean value) {
+        rememberDecline = value;
+    }
+
+    public static void setCheckOnResume(boolean value) {
+        checkOnResume = value;
+    }
+
+    private static void setState(int value, String error) {
+        lastError = error == null ? "" : error;
+        if (state == value)
+            return;
+
+        state = value;
+        HaxeObject target = listener;
+        if (target != null) {
+            try {
+                target.call("onStateChanged", new Object[]{ value, lastError });
+            } catch (Exception e) {
+                Log.e(TAG, e.toString());
+            }
+        }
+    }
+
+    private static void silentCheck(final Runnable onFailed) {
+        if (activity() == null)
+            return;
+
+        init();
+        busy = true;
+        if (!authenticated)
+            setState(STATE_CONNECTING, null);
+
+        PlayGames.getGamesSignInClient(activity()).isAuthenticated().addOnCompleteListener(new OnCompleteListener<AuthenticationResult>() {
+            @Override
+            public void onComplete(Task<AuthenticationResult> task) {
+                boolean ok = task.isSuccessful() && task.getResult() != null && task.getResult().isAuthenticated();
+                setAuthenticated(ok);
+                busy = false;
+
+                if (ok) {
+                    setState(STATE_CONNECTED, null);
+                } else if (onFailed != null) {
+                    onFailed.run();
+                } else {
+                    setState(STATE_DISCONNECTED, task.isSuccessful() ? null : error(task.getException()));
+                }
+            }
+        });
+    }
+
+    private static void prompt(final HaxeObject callback, final boolean automatic) {
+        if (activity() == null) {
+            respond(callback, false, "{\"code\":-1,\"message\":\"Activity not available\"}");
+            return;
+        }
+
+        init();
+        busy = true;
+        setState(STATE_CONNECTING, null);
+
+        PlayGames.getGamesSignInClient(activity()).signIn().addOnCompleteListener(new OnCompleteListener<AuthenticationResult>() {
+            @Override
+            public void onComplete(Task<AuthenticationResult> task) {
+                boolean ok = task.isSuccessful() && task.getResult() != null && task.getResult().isAuthenticated();
+                setAuthenticated(ok);
+                busy = false;
+
+                if (ok) {
+                    setDeclined(false);
+                    setState(STATE_CONNECTED, null);
+                    respond(callback, true, "true");
+                    return;
+                }
+
+                String message = task.isSuccessful() ? "{\"code\":-1,\"message\":\"Sign in canceled\"}" : error(task.getException());
+                if (automatic && rememberDecline)
+                    setDeclined(true);
+
+                setState(STATE_FAILED, message);
+                respond(callback, false, message);
+            }
+        });
+    }
+
+    public static void autoConnect() {
+        if (busy || authenticated)
+            return;
+
+        silentCheck(new Runnable() {
+            @Override
+            public void run() {
+                boolean canPrompt = mode == MODE_AUTO
+                    && autoPrompts < maxAutoPrompts
+                    && !(rememberDecline && isDeclined());
+
+                if (canPrompt) {
+                    autoPrompts++;
+                    prompt(null, true);
+                } else {
+                    setState(STATE_DISCONNECTED, null);
+                }
+            }
+        });
+    }
+
+    public static void connect(HaxeObject callback) {
+        if (authenticated) {
+            respond(callback, true, "true");
+            return;
+        }
+
+        if (busy) {
+            respond(callback, false, "{\"code\":-2,\"message\":\"Sign in already in progress\"}");
+            return;
+        }
+
+        setDeclined(false);
+        prompt(callback, false);
     }
 
     public static void init() {
@@ -181,6 +412,10 @@ public class PlayGamesManager extends Extension {
             public String convert(AuthenticationResult value) {
                 boolean ok = value != null && value.isAuthenticated();
                 setAuthenticated(ok);
+                if (ok)
+                    setState(STATE_CONNECTED, null);
+                else if (state == STATE_CONNECTED)
+                    setState(STATE_DISCONNECTED, null);
                 return ok ? "true" : "false";
             }
         };
@@ -198,8 +433,7 @@ public class PlayGamesManager extends Extension {
         if (!ready(callback))
             return;
 
-        GamesSignInClient client = PlayGames.getGamesSignInClient(activity());
-        onTask(client.signIn(), callback, authConverter());
+        connect(callback);
     }
 
     public static void requestServerSideAccess(String serverClientId, boolean forceRefreshToken, final HaxeObject callback) {
