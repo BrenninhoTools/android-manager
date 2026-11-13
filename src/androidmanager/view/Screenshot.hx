@@ -2,6 +2,7 @@ package androidmanager.view;
 
 import androidmanager.app.Application;
 import androidmanager.content.Context;
+import androidmanager.content.Share;
 #if android
 import androidmanager.jni.JNICache;
 #end
@@ -119,16 +120,77 @@ class Screenshot {
 		});
 	}
 
-	public static function captureAndShare(chooserTitle:String = "Share", ?options:ScreenshotOptions, ?callback:(shared:Bool, ?error:String) -> Void):Void {
+	public static var shareFolder:String = "androidmanager_share";
+	public static var keepSharedFiles:Int = 3;
+
+	public static function share(?options:ScreenshotOptions, ?shareOptions:ShareOptions, ?callback:ShareResult->Void):Void {
 		if (options == null)
 			options = {};
+		if (shareOptions == null)
+			shareOptions = {};
 
-		options.gallery = true;
-		capture(null, options, function(result, ?error) {
-			var ok = result != null && result.uri != null && Application.shareUri(result.uri, mimeOf(result.format), chooserTitle);
+		var format:ScreenshotFormat = options.format != null ? options.format : defaultFormat;
+		options.format = format;
+
+		var path = sharePath(format);
+		if (path == null) {
 			if (callback != null)
-				callback(ok, ok ? null : (error != null ? error : "Screenshot could not be shared"));
+				callback({started: false, app: null, error: "No cache directory available"});
+			return;
+		}
+
+		cleanShareFolder();
+
+		capture(path, options, function(result, ?error) {
+			if (result == null || result.path == null) {
+				if (callback != null)
+					callback({started: false, app: null, error: error != null ? error : "Screenshot failed"});
+				return;
+			}
+
+			if (shareOptions.mimeType == null)
+				shareOptions.mimeType = mimeOf(result.format);
+
+			Share.file(result.path, shareOptions, callback);
 		});
+	}
+
+	public static function shareTo(target:ShareTarget, ?text:String, ?options:ScreenshotOptions, ?callback:ShareResult->Void):Void
+		share(options, {target: target, text: text}, callback);
+
+	public static function captureAndShare(chooserTitle:String = "Share", ?options:ScreenshotOptions, ?callback:(shared:Bool, ?error:String) -> Void):Void {
+		share(options, {title: chooserTitle}, function(result) {
+			if (callback != null)
+				callback(result.started, result.error);
+		});
+	}
+
+	private static function sharePath(format:ScreenshotFormat):Null<String> {
+		var base = Context.cacheDir;
+		if (base == null)
+			return null;
+
+		var stamp = DateTools.format(Date.now(), "%Y%m%d_%H%M%S") + "_" + Std.string(Std.int((Timer.stamp() * 1000) % 1000));
+		return base + "/" + shareFolder + "/Screenshot_" + stamp + "." + format;
+	}
+
+	private static function cleanShareFolder():Void {
+		#if sys
+		var base = Context.cacheDir;
+		if (base == null)
+			return;
+
+		var folder = base + "/" + shareFolder;
+		try {
+			if (!sys.FileSystem.exists(folder))
+				return;
+
+			var files = [for (name in sys.FileSystem.readDirectory(folder)) if (StringTools.startsWith(name, "Screenshot_")) name];
+			files.sort(function(a, b) return a < b ? -1 : a > b ? 1 : 0);
+			while (files.length > Std.int(Math.max(0, keepSharedFiles - 1)))
+				sys.FileSystem.deleteFile(folder + "/" + files.shift());
+		} catch (e:Dynamic) {}
+		#end
 	}
 
 	public static function startDetection():Bool {

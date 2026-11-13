@@ -45,6 +45,8 @@ Great, now you can use the library!
 | `androidmanager.content.Clipboard` | Read and write the clipboard |
 | `androidmanager.net.Network` | Connection status, type, metered and change events |
 | `androidmanager.games.PlayGames` | Google Play Games v2: sign in, player info and avatar, achievements, leaderboards, events, saved games |
+| `androidmanager.content.Storage` | Volumes, SD card, space, game folder picker, public folders (Downloads, Documents...), async copy, move, delete, zip and unzip |
+| `androidmanager.content.Share` | Share files, multiple files and text, target specific apps and know which app was chosen |
 | `androidmanager.view.Screenshot` | Screenshots to file, gallery, base64 or `Image`, crop, scale, share and screenshot detection |
 | `androidmanager.provider.Settings` | Read system/secure/global settings and open settings screens |
 | `androidmanager.os.Build`, `androidmanager.os.Environment`, `androidmanager.content.Context`, `androidmanager.battery.Battery` | Build info, directories, logcat and battery |
@@ -166,7 +168,8 @@ var latency = AudioManager.outputLatency;
 Screenshot.capture();
 Screenshot.capture(Context.getExternalFilesDir() + "/shot.jpg", {quality: 90, maxSize: 1280, sound: true});
 Screenshot.saveToGallery({album: "My Game"}, function(uri, ?error) {});
-Screenshot.captureAndShare("Share your score");
+Screenshot.share({maxSize: 1280}, {text: "My new high score!"});
+Screenshot.shareTo(WHATSAPP, "Look at this");
 Screenshot.captureImage({scale: 0.25}, function(image, ?error) if (image != null) preview.pixels = BitmapData.fromImage(image));
 
 Screenshot.onUserScreenshot.add(function() Interface.makeToast("Screenshot detected"));
@@ -175,6 +178,40 @@ Screenshot.blocked = true;
 ```
 
 Options: `format` (png, jpg, webp), `quality`, `scale`, `maxSize`, crop with `x`, `y`, `width` and `height`, `gallery`, `album`, `fileName`, `base64`, `sound` and `delay` in milliseconds. Detecting screenshots taken by the player requires Android 14+.
+
+## Storage
+
+```haxe
+var dir = Storage.getGameDirectory("MyGame");
+var mods = Storage.getPath(MEDIA, "mods");
+var space = Storage.getSpace(dir);
+Interface.makeToast(Storage.formatBytes(space.available) + " free");
+
+var card = Storage.sdCard;
+Storage.requestAccess(true, function(granted) if (granted) loadFrom(Storage.getPath(ROOT, ".MyGame")));
+
+Storage.unzip(downloadedZip, mods, true, {
+	onProgress: function(done, total, current) bar.value = done / total,
+	onComplete: function(success, result) if (success) reloadMods()
+});
+
+Storage.zip(dir + "/saves", Storage.getPath(CACHE, "backup.zip"), {
+	onComplete: function(success, path) if (success) Storage.saveToDownloads(path, "MyGame")
+});
+```
+
+`getGameDirectory` picks the first writable folder between `/storage/emulated/0/.<name>` (only with `preferRoot` and all files access), `Android/media/<package>`, `Android/data/<package>/files` and the internal files folder. Locations: `INTERNAL`, `CACHE`, `EXTERNAL`, `EXTERNAL_CACHE`, `MEDIA`, `OBB`, `ROOT`. `saveToPublic` writes to Downloads, Documents, Pictures, Music, Movies or DCIM through MediaStore, without permissions on Android 10+. Async tasks: `copy`, `move`, `delete`, `zip`, `unzip`, `getSizeAsync`.
+
+## Share
+
+```haxe
+Share.file(Storage.getPath(CACHE, "backup.zip"), {title: "Send backup"});
+Share.files([chartPath, songPath], {target: DISCORD, text: "New chart"});
+Share.text("Play my mod!", {target: WHATSAPP});
+Share.onShared.add(function(app) Interface.makeToast("Shared with " + app));
+```
+
+Any file inside the app folders, `Android/media` or the shared storage can be shared. The extension includes its own read only content provider, so no `FileProvider` setup is needed. If the target app is not installed, the system share sheet opens instead, and the callback tells which app the player picked.
 
 ## Example
 

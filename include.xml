@@ -6,7 +6,8 @@
 
 	<section if="android">
 		<java path="project/src/main/java" />
-		<dependency name="androidx.core:core:1.9.0" />
+
+		<dependency name="android-manager-share" path="dependencies/share" />
 
 		<config:android extension="androidmanager.CallbackManager" />
 
