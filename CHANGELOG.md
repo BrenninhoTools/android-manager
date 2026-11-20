@@ -21,6 +21,8 @@ Changelog
 - `Screenshot.share` and `Screenshot.shareTo` share through the content provider without saving to the gallery
 - Removed the `androidx.core` dependency line that had no effect
 - Added `Vibrator` with patterns, amplitudes, predefined effects and haptic feedback
+- `Vibrator` gained composition primitives, primitive and effect support checks, primitive durations, vibration usage attributes, resonant frequency, Q factor and vibrator count
+- Added `Input` with low latency touch dispatch, touch slop, tap, double tap and long press timeouts, fling velocities, density, max touch points, input source checks and the system touch feedback setting
 - Added `PlayGames` (Google Play Games Services v2) with sign in, server side access, player info and avatar, achievements, leaderboards, events and saved games, enabled with `PLAY_GAMES_APP_ID`
 - `PlayGames` connection modes (`auto`, `silent`, `manual`) with state events, automatic prompt limits, remembered declines and silent re-check on resume
 - `Battery` rewritten: typed events (level, charging, power connected, low, power save, doze, thermal, overheat), level alerts, current, watts, capacity, health percent, cycle count, time to full and empty, thermal headroom and battery settings shortcuts
