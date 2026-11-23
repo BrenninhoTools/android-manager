@@ -154,6 +154,18 @@ class Context {
      * Returns the absolute path to the directory in which a database is stored.
      * @param name The name of the database file.
      */
+    public static function getFilesDir():Null<String>
+        return internalFilesDir;
+
+    public static function getCacheDir():Null<String>
+        return cacheDir;
+
+    public static function getObbDir():Null<String>
+        return obbDir;
+
+    public static function getExternalMediaDir():Null<String>
+        return androidmanager.content.Storage.getPath(androidmanager.content.Storage.StorageLocation.MEDIA);
+
     public static function getDatabasePath(name:String):String {
         #if android
         var func = JNICache.getStaticMethod("androidmanager/ContextManager$Storage", "getDatabasePath", "(Ljava/lang/String;)Ljava/lang/String;");

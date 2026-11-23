@@ -46,10 +46,11 @@ Great, now you can use the library!
 | `androidmanager.net.Network` | Connection status, type, metered and change events |
 | `androidmanager.games.PlayGames` | Google Play Games v2: sign in, player info and avatar, achievements, leaderboards, events, saved games |
 | `androidmanager.content.Storage` | Volumes, SD card, space, game folder picker, public folders (Downloads, Documents...), async copy, move, delete, zip and unzip |
+| `androidmanager.content.Assets` | Read, list and extract files from the APK assets, with multithreaded batch copies, progress and failed file reports |
 | `androidmanager.content.Share` | Share files, multiple files and text, target specific apps and know which app was chosen |
 | `androidmanager.view.Screenshot` | Screenshots to file, gallery, base64 or `Image`, crop, scale, share and screenshot detection |
 | `androidmanager.provider.Settings` | Read system/secure/global settings and open settings screens |
-| `androidmanager.os.Build`, `androidmanager.os.Environment`, `androidmanager.content.Context`, `androidmanager.battery.Battery` | Build info, directories, logcat and battery |
+| `androidmanager.os.Build`, `androidmanager.os.Environment`, `androidmanager.content.Context`, `androidmanager.battery.Battery` | Build info, directories (with `getFilesDir`, `getObbDir`, `getCacheDir` and `getExternalFilesDir` like extension-androidtools), logcat and battery |
 
 ## Google Play Games
 
@@ -239,3 +240,18 @@ Callbacks coming from Java are delivered on the Haxe main thread when using Lime
 
 ## License
 Android-Manager is free and anyone can use it, for more information, check [LICENSE](LICENSE.md)
+
+## Migrating from extension-androidtools
+
+| extension-androidtools | android-manager |
+| --- | --- |
+| `extension.androidtools.content.Context.getFilesDir()` | `androidmanager.content.Context.getFilesDir()` |
+| `extension.androidtools.content.Context.getExternalFilesDir()` | `androidmanager.content.Context.getExternalFilesDir()` |
+| `extension.androidtools.content.Context.getObbDir()` | `androidmanager.content.Context.getObbDir()` |
+| `extension.androidtools.content.Context.getCacheDir()` | `androidmanager.content.Context.getCacheDir()` |
+| `extension.androidtools.os.Environment.getExternalStorageDirectory()` | `androidmanager.os.Environment.getExternalStorageDirectory()` |
+| `extension.androidtools.Permissions.requestPermissions(...)` | `androidmanager.tools.PermissionUtils.requestPermissions(...)` |
+| `extension.androidtools.Settings.requestSetting(...)` | `androidmanager.tools.PermissionUtils.requestManageExternalStorage()` |
+| `extension.androidtools.os.Build.VERSION.SDK_INT` | `androidmanager.os.Build.VERSION.SDK_INT` |
+| `extension.androidtools.widget.Toast.makeText(...)` | `androidmanager.content.Interface` |
+

@@ -1,6 +1,15 @@
 Changelog
 =========
 
+1.3.0 (??/??/2026)
+------------------
+
+- Added `Assets` to read, list, measure and extract files from the APK assets
+- `Assets.batch` copies many assets or files on a native thread pool, with progress, copied bytes, elapsed time, cancelling and a list of failed jobs
+- Asset copies write to a temporary file first, so a failed copy never leaves a broken file
+- `Context` gained `getFilesDir`, `getCacheDir`, `getObbDir` and `getExternalMediaDir`, matching extension-androidtools so projects can switch with only an import change
+- README gained a migration table from extension-androidtools
+
 1.2.0 (??/??/2026)
 ------------------
 
