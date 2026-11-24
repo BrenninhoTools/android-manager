@@ -1,6 +1,13 @@
 Changelog
 =========
 
+1.4.0 (??/??/2026)
+------------------
+
+- Added `Tools` with extension-androidtools style helpers (`isTablet`, `isChromebook`, `isRooted`, `isAndroidTV`, `isDeXMode`, `isDolbyAtmos`, `minimizeWindow`, `launchPackage`, `openURL`)
+- Added `widget.Toast` with `makeText`, `LENGTH_SHORT` and `LENGTH_LONG`, matching extension-androidtools
+- README migration table now covers `Build`, `Tools` and `Toast`
+
 1.3.0 (??/??/2026)
 ------------------
 

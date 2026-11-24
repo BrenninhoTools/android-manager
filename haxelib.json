@@ -2,7 +2,7 @@
 	"name": "android-manager",
 	"url": "https://github.com/BrenninhoTools/android-manager",
 	"license": "MIT",
-	"releasenote": "Asset extraction with multithreaded batch copies and extension-androidtools compatible Context helpers. See CHANGELOG",
+	"releasenote": "extension-androidtools compatible Tools and Toast helpers. See CHANGELOG",
 	"tags": [
 		"android",
 		"files",
@@ -11,7 +11,7 @@
 		"manager"
 	],
 	"description": "A Haxe/Lime extension for android devices",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"contributors": [
 		"LumiCoder",
 		"StarNovaBR"

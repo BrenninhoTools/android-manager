@@ -249,9 +249,13 @@ Android-Manager is free and anyone can use it, for more information, check [LICE
 | `extension.androidtools.content.Context.getExternalFilesDir()` | `androidmanager.content.Context.getExternalFilesDir()` |
 | `extension.androidtools.content.Context.getObbDir()` | `androidmanager.content.Context.getObbDir()` |
 | `extension.androidtools.content.Context.getCacheDir()` | `androidmanager.content.Context.getCacheDir()` |
+| `extension.androidtools.os.Build` / `Build.VERSION` / `Build.VERSION_CODES` | `androidmanager.os.Build` / `Build.VERSION` / `Build.VERSION_CODES` |
+| `extension.androidtools.Tools.isTablet()` | `androidmanager.Tools.isTablet()` or `androidmanager.os.Device.tablet` |
+| `extension.androidtools.Tools.isChromebook()` | `androidmanager.Tools.isChromebook()` or `androidmanager.os.Device.chromebook` |
+| `extension.androidtools.Tools.isRooted()` | `androidmanager.Tools.isRooted()` or `androidmanager.os.Device.rooted` |
+| `extension.androidtools.widget.Toast.makeText(text, Toast.LENGTH_SHORT)` | `androidmanager.widget.Toast.makeText(text, Toast.LENGTH_SHORT)` |
 | `extension.androidtools.os.Environment.getExternalStorageDirectory()` | `androidmanager.os.Environment.getExternalStorageDirectory()` |
 | `extension.androidtools.Permissions.requestPermissions(...)` | `androidmanager.tools.PermissionUtils.requestPermissions(...)` |
 | `extension.androidtools.Settings.requestSetting(...)` | `androidmanager.tools.PermissionUtils.requestManageExternalStorage()` |
 | `extension.androidtools.os.Build.VERSION.SDK_INT` | `androidmanager.os.Build.VERSION.SDK_INT` |
-| `extension.androidtools.widget.Toast.makeText(...)` | `androidmanager.content.Interface` |
 
