@@ -1,6 +1,22 @@
 Changelog
 =========
 
+1.5.0 (??/??/2026)
+------------------
+
+- Added a public Java API: `androidmanager.AndroidManager` is the entry point for Java code (version, activity, context, UI thread and background helpers, delayed posts, logging, info JSON)
+- `AndroidManager.Listener` lets other Java extensions receive lifecycle, activity result, permission result, back button, memory and new intent events, all forwarded by `CallbackManager`
+- Added `BuildInfo` in Java with every `Build` and `Build.VERSION` value, SoC info, ABIs and API level guards
+- Added `EnvironmentManager` in Java with standard directories, storage state and API guarded checks (`isExternalStorageManager` no longer fails below Android 11)
+- Added `Tools` in Java mirroring the Haxe `Tools` helpers and toasts
+- `Build`, `VERSION` and `Environment` on the Haxe side now go only through android-manager's own Java classes, with no direct JNI access to Android framework classes
+- `Build` gained `SOC_MANUFACTURER`, `SOC_MODEL`, `SUPPORTED_ABIS`, `IS_64_BIT`, `isAtLeast` and `toJson`, and `VERSION` gained `PREVIEW_SDK_INT`
+- `VERSION_CODES` gained `BAKLAVA` and `CUR_DEVELOPMENT`
+- `Environment` gained `DIRECTORY_RECORDINGS`, storage state constants, `getStorageDirectory`, `isExternalStorageMounted`, `isExternalStorageReadOnly`, `isExternalStorageEmulated` and `isExternalStorageLegacy`
+- Fixed `Environment.dumpSystemLogs` passing the tag filter as a single logcat argument
+- Added the Haxe `AndroidManager` class with version, readiness, logging and info
+- `compileSdkVersion` and `targetSdkVersion` raised to 35
+
 1.4.0 (??/??/2026)
 ------------------
 

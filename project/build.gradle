@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace 'androidmanager'
-    compileSdkVersion 33 
+    compileSdkVersion 35
 
     defaultConfig {
         minSdkVersion 21
-        targetSdkVersion 33
+        targetSdkVersion 35
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

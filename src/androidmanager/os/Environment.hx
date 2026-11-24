@@ -2,382 +2,179 @@ package androidmanager.os;
 
 #if android
 import androidmanager.jni.JNICache;
-import lime.system.JNI;
 #end
 
-/**
- * Standard Logcat filter levels on Android.
- */
 enum abstract LogLevel(String) to String {
-    var VERBOSE = "V";
-    var DEBUG = "D";
-    var INFO = "I";
-    var WARN = "W";
-    var ERROR = "E";
-    var FATAL = "F";
-    var SILENT = "S";
+	var VERBOSE = "V";
+	var DEBUG = "D";
+	var INFO = "I";
+	var WARN = "W";
+	var ERROR = "E";
+	var FATAL = "F";
+	var SILENT = "S";
 }
 
-/**
- * Provides access to environment variables and standard directories.
- * * @see https://developer.android.com/reference/android/os/Environment
- */
 class Environment {
-    
-    /**
-     * Standard directory in which to place files that have been downloaded by the user.
-     */
-    public static var DIRECTORY_DOWNLOADS(get, never):String;
+	static inline final CLASS:String = "androidmanager/EnvironmentManager";
 
-    /**
-     * Standard directory in which to place any audio files that should be in the regular list of music for the user.
-     */
-    public static var DIRECTORY_MUSIC(get, never):String;
+	public static var DIRECTORY_DOWNLOADS(get, never):String;
+	public static var DIRECTORY_MUSIC(get, never):String;
+	public static var DIRECTORY_PICTURES(get, never):String;
+	public static var DIRECTORY_DOCUMENTS(get, never):String;
+	public static var DIRECTORY_MOVIES(get, never):String;
+	public static var DIRECTORY_DCIM(get, never):String;
+	public static var DIRECTORY_ALARMS(get, never):String;
+	public static var DIRECTORY_RINGTONES(get, never):String;
+	public static var DIRECTORY_NOTIFICATIONS(get, never):String;
+	public static var DIRECTORY_PODCASTS(get, never):String;
+	public static var DIRECTORY_AUDIOBOOKS(get, never):String;
+	public static var DIRECTORY_SCREENSHOTS(get, never):String;
+	public static var DIRECTORY_RECORDINGS(get, never):String;
 
-    /**
-     * Standard directory in which to place pictures that are available to the user.
-     */
-    public static var DIRECTORY_PICTURES(get, never):String;
-    
-    /**
-     * Standard directory in which to place documents that have been created by the user.
-     */
-    public static var DIRECTORY_DOCUMENTS(get, never):String;
+	public static inline final MEDIA_MOUNTED:String = "mounted";
+	public static inline final MEDIA_MOUNTED_READ_ONLY:String = "mounted_ro";
+	public static inline final MEDIA_REMOVED:String = "removed";
+	public static inline final MEDIA_UNMOUNTED:String = "unmounted";
+	public static inline final MEDIA_UNKNOWN:String = "unknown";
 
-    /**
-     * Standard directory in which to place movies that are available to the user.
-     */
-    public static var DIRECTORY_MOVIES(get, never):String;
+	static var directoryNames:Map<String, String> = new Map();
 
-    /**
-     * The traditional location for pictures and videos when mounting the device as a camera.
-     */
-    public static var DIRECTORY_DCIM(get, never):String;
+	static function directoryName(key:String):String {
+		if (directoryNames.exists(key))
+			return directoryNames.get(key);
 
-    /**
-     * Standard directory in which to place any audio files that should be in the list of alarms.
-     */
-    public static var DIRECTORY_ALARMS(get, never):String;
+		#if android
+		var value:Null<String> = JNICache.call(CLASS, "getDirectoryName", "(Ljava/lang/String;)Ljava/lang/String;", [key], null);
+		if (value != null && value.length > 0) {
+			directoryNames.set(key, value);
+			return value;
+		}
+		#end
+		return "Unknown";
+	}
 
-    /**
-     * Standard directory in which to place any audio files that should be in the list of ringtones.
-     */
-    public static var DIRECTORY_RINGTONES(get, never):String;
+	static function string(method:String, ?args:Array<Dynamic>, fallback:String = "Unknown"):String {
+		#if android
+		var signature = args != null && args.length > 0 ? "(Ljava/lang/String;)Ljava/lang/String;" : "()Ljava/lang/String;";
+		var value:Null<String> = JNICache.call(CLASS, method, signature, args != null ? args : [], null);
+		return value != null && value.length > 0 ? value : fallback;
+		#else
+		return fallback;
+		#end
+	}
 
-    /**
-     * Standard directory in which to place any audio files that should be in the list of notifications.
-     */
-    public static var DIRECTORY_NOTIFICATIONS(get, never):String;
+	static function bool(method:String):Bool {
+		#if android
+		var value:Null<Bool> = JNICache.call(CLASS, method, "()Z", [], null);
+		return value == true;
+		#else
+		return false;
+		#end
+	}
 
-    /**
-     * Standard directory in which to place podcasts that are available to the user.
-     */
-    public static var DIRECTORY_PODCASTS(get, never):String;
+	static function get_DIRECTORY_DOWNLOADS():String
+		return directoryName("DOWNLOADS");
 
-    /**
-     * Standard directory in which to place audiobooks that are available to the user (API 29+).
-     */
-    public static var DIRECTORY_AUDIOBOOKS(get, never):String;
+	static function get_DIRECTORY_MUSIC():String
+		return directoryName("MUSIC");
 
-    /**
-     * Standard directory in which to place screenshots that are available to the user (API 29+).
-     */
-    public static var DIRECTORY_SCREENSHOTS(get, never):String;
+	static function get_DIRECTORY_PICTURES():String
+		return directoryName("PICTURES");
 
-    private static function get_DIRECTORY_DOWNLOADS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_DOWNLOADS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Download";
-        #else
-        return "Download";
-        #end
-    }
+	static function get_DIRECTORY_DOCUMENTS():String
+		return directoryName("DOCUMENTS");
 
-    private static function get_DIRECTORY_MUSIC():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_MUSIC", "Ljava/lang/String;");
-        return field != null ? field.get() : "Music";
-        #else
-        return "Music";
-        #end
-    }
+	static function get_DIRECTORY_MOVIES():String
+		return directoryName("MOVIES");
 
-    private static function get_DIRECTORY_PICTURES():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_PICTURES", "Ljava/lang/String;");
-        return field != null ? field.get() : "Pictures";
-        #else
-        return "Pictures";
-        #end
-    }
+	static function get_DIRECTORY_DCIM():String
+		return directoryName("DCIM");
 
-    private static function get_DIRECTORY_DOCUMENTS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_DOCUMENTS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Documents";
-        #else
-        return "Documents";
-        #end
-    }
+	static function get_DIRECTORY_ALARMS():String
+		return directoryName("ALARMS");
 
-    private static function get_DIRECTORY_MOVIES():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_MOVIES", "Ljava/lang/String;");
-        return field != null ? field.get() : "Movies";
-        #else
-        return "Movies";
-        #end
-    }
+	static function get_DIRECTORY_RINGTONES():String
+		return directoryName("RINGTONES");
 
-    private static function get_DIRECTORY_DCIM():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_DCIM", "Ljava/lang/String;");
-        return field != null ? field.get() : "DCIM";
-        #else
-        return "DCIM";
-        #end
-    }
+	static function get_DIRECTORY_NOTIFICATIONS():String
+		return directoryName("NOTIFICATIONS");
 
-    private static function get_DIRECTORY_ALARMS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_ALARMS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Alarms";
-        #else
-        return "Alarms";
-        #end
-    }
+	static function get_DIRECTORY_PODCASTS():String
+		return directoryName("PODCASTS");
 
-    private static function get_DIRECTORY_RINGTONES():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_RINGTONES", "Ljava/lang/String;");
-        return field != null ? field.get() : "Ringtones";
-        #else
-        return "Ringtones";
-        #end
-    }
+	static function get_DIRECTORY_AUDIOBOOKS():String
+		return directoryName("AUDIOBOOKS");
 
-    private static function get_DIRECTORY_NOTIFICATIONS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_NOTIFICATIONS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Notifications";
-        #else
-        return "Notifications";
-        #end
-    }
+	static function get_DIRECTORY_SCREENSHOTS():String
+		return directoryName("SCREENSHOTS");
 
-    private static function get_DIRECTORY_PODCASTS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_PODCASTS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Podcasts";
-        #else
-        return "Podcasts";
-        #end
-    }
+	static function get_DIRECTORY_RECORDINGS():String
+		return directoryName("RECORDINGS");
 
-    private static function get_DIRECTORY_AUDIOBOOKS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_AUDIOBOOKS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Audiobooks";
-        #else
-        return "Audiobooks";
-        #end
-    }
+	public static function getExternalStorageDirectory():String
+		return string("getExternalStorageDirectory");
 
-    private static function get_DIRECTORY_SCREENSHOTS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Environment", "DIRECTORY_SCREENSHOTS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Screenshots";
-        #else
-        return "Screenshots";
-        #end
-    }
+	public static function getExternalStoragePublicDirectory(type:String):String
+		return string("getExternalStoragePublicDirectory", [type != null ? type : ""]);
 
-    /**
-     * Return the primary shared/external storage directory.
-     * * Note: Starting in Android 11 (API level 30), apps cannot freely read/write 
-     * in this directory without the MANAGE_EXTERNAL_STORAGE permission due to Scoped Storage.
-     * * @return The absolute path of the external storage directory (e.g., "/storage/emulated/0").
-     */
-    public static function getExternalStorageDirectory():String {
-        #if android
-        try {
-            var getDirFunc = JNICache.getStaticMethod("android/os/Environment", "getExternalStorageDirectory", "()Ljava/io/File;");
-            
-            if (getDirFunc == null) return "Unknown";
-            
-            var fileObject:Dynamic = getDirFunc();
-            if (fileObject == null) return "Unknown";
+	public static function getDataDirectory():String
+		return string("getDataDirectory");
 
-            var getPathFunc = JNI.createMemberMethod("java/io/File", "getAbsolutePath", "()Ljava/lang/String;");
-            
-            var finalPath:String = getPathFunc(fileObject);
-            
-            return finalPath != null ? finalPath : "Unknown";
-            
-        } catch(e:Dynamic) {
-            return "Error: " + e;
-        }
-        #else
-        return "Unknown";
-        #end
-    }
+	public static function getRootDirectory():String
+		return string("getRootDirectory");
 
-    /**
-     * Get a top-level shared/external storage directory for placing files of a particular type.
-     * @param type The type of storage directory to return (e.g., Environment.DIRECTORY_MUSIC).
-     * @return The absolute path of the directory.
-     */
-    public static function getExternalStoragePublicDirectory(type:String):String {
-        #if android
-        try {
-            var getDirFunc = JNICache.getStaticMethod("android/os/Environment", "getExternalStoragePublicDirectory", "(Ljava/lang/String;)Ljava/io/File;");
-            if (getDirFunc == null) return "Unknown";
-            
-            var fileObject:Dynamic = getDirFunc(type);
-            if (fileObject == null) return "Unknown";
+	public static function getDownloadCacheDirectory():String
+		return string("getDownloadCacheDirectory");
 
-            var getPathFunc = JNI.createMemberMethod("java/io/File", "getAbsolutePath", "()Ljava/lang/String;");
-            var finalPath:String = getPathFunc(fileObject);
-            
-            return finalPath != null ? finalPath : "Unknown";
-        } catch(e:Dynamic) {
-            return "Error: " + e;
-        }
-        #else
-        return "Unknown";
-        #end
-    }
+	public static function getStorageDirectory():String
+		return string("getStorageDirectory", null, "/storage");
 
-    /**
-     * Return the user data directory.
-     * @return The absolute path of the data directory (e.g., "/data").
-     */
-    public static function getDataDirectory():String {
-        #if android
-        try {
-            var getDirFunc = JNICache.getStaticMethod("android/os/Environment", "getDataDirectory", "()Ljava/io/File;");
-            if (getDirFunc == null) return "Unknown";
-            var fileObject:Dynamic = getDirFunc();
-            if (fileObject == null) return "Unknown";
-            var getPathFunc = JNI.createMemberMethod("java/io/File", "getAbsolutePath", "()Ljava/lang/String;");
-            var finalPath:String = getPathFunc(fileObject);
-            return finalPath != null ? finalPath : "Unknown";
-        } catch(e:Dynamic) { return "Error: " + e; }
-        #else
-        return "Unknown";
-        #end
-    }
+	public static function getExternalStorageState():String
+		return string("getExternalStorageState", null, MEDIA_UNKNOWN);
 
-    /**
-     * Return the root directory where the Android OS is installed.
-     * @return The absolute path of the root directory (e.g., "/system").
-     */
-    public static function getRootDirectory():String {
-        #if android
-        try {
-            var getDirFunc = JNICache.getStaticMethod("android/os/Environment", "getRootDirectory", "()Ljava/io/File;");
-            if (getDirFunc == null) return "Unknown";
-            var fileObject:Dynamic = getDirFunc();
-            if (fileObject == null) return "Unknown";
-            var getPathFunc = JNI.createMemberMethod("java/io/File", "getAbsolutePath", "()Ljava/lang/String;");
-            var finalPath:String = getPathFunc(fileObject);
-            return finalPath != null ? finalPath : "Unknown";
-        } catch(e:Dynamic) { return "Error: " + e; }
-        #else
-        return "Unknown";
-        #end
-    }
+	public static function isExternalStorageMounted():Bool
+		return bool("isExternalStorageMounted");
 
-    /**
-     * Return the download/cache content directory.
-     * @return The absolute path of the cache directory (e.g., "/cache").
-     */
-    public static function getDownloadCacheDirectory():String {
-        #if android
-        try {
-            var getDirFunc = JNICache.getStaticMethod("android/os/Environment", "getDownloadCacheDirectory", "()Ljava/io/File;");
-            if (getDirFunc == null) return "Unknown";
-            var fileObject:Dynamic = getDirFunc();
-            if (fileObject == null) return "Unknown";
-            var getPathFunc = JNI.createMemberMethod("java/io/File", "getAbsolutePath", "()Ljava/lang/String;");
-            var finalPath:String = getPathFunc(fileObject);
-            return finalPath != null ? finalPath : "Unknown";
-        } catch(e:Dynamic) { return "Error: " + e; }
-        #else
-        return "Unknown";
-        #end
-    }
+	public static function isExternalStorageReadOnly():Bool
+		return bool("isExternalStorageReadOnly");
 
-    /**
-     * Returns the current state of the primary shared/external storage media.
-     */
-    public static function getExternalStorageState():String {
-        #if android
-        var func = JNICache.getStaticMethod("android/os/Environment", "getExternalStorageState", "()Ljava/lang/String;");
-        return func != null ? func() : "unknown";
-        #else
-        return "unknown";
-        #end
-    }
+	public static function isExternalStorageManager():Bool
+		return bool("isExternalStorageManager");
 
-    /**
-     * Returns whether the calling app has All Files Access (MANAGE_EXTERNAL_STORAGE).
-     */
-    public static function isExternalStorageManager():Bool {
-        #if android
-        var func = JNICache.getStaticMethod("android/os/Environment", "isExternalStorageManager", "()Z");
-        if (func != null) {
-            try {
-                return func();
-            } catch(e:Dynamic) {
-                return false;
-            }
-        }
-        return false; 
-        #else
-        return false;
-        #end
-    }
+	public static function isExternalStorageRemovable():Bool
+		return bool("isExternalStorageRemovable");
 
-    /**
-     * Returns whether the primary shared/external storage media is physically removable.
-     */
-    public static function isExternalStorageRemovable():Bool {
-        #if android
-        var func = JNICache.getStaticMethod("android/os/Environment", "isExternalStorageRemovable", "()Z");
-        return func != null ? func() : false;
-        #else
-        return false;
-        #end
-    }
+	public static function isExternalStorageEmulated():Bool
+		return bool("isExternalStorageEmulated");
 
-   /**
-     * Reads the Android logcat with the specified filter.
-     * @param level The minimum log level (e.g., LogLevel.ERROR). Default is DEBUG.
-     * @param tag The specific tag to filter (e.g., "haxe", "lime"). Default is "*" (all).
-     * @return The complete logcat text.
-     */
-    public static function dumpSystemLogs(level:LogLevel = DEBUG, tag:String = "*"):String {
-        #if android
-        try {
-            var filter = tag == "*" ? '*:$level' : '$tag:$level *:S';
-            
-            var process = new sys.io.Process("logcat", ["-d", "-v", "threadtime", filter]);
-            
-            var output = process.stdout.readAll().toString();
-            var errorOutput = process.stderr.readAll().toString();
-            process.close();
+	public static function isExternalStorageLegacy():Bool
+		return bool("isExternalStorageLegacy");
 
-            if (output.length == 0 && errorOutput.length > 0) {
-                return "Error in logcat command: " + errorOutput;
-            }
+	public static function dumpSystemLogs(level:LogLevel = DEBUG, tag:String = "*"):String {
+		#if android
+		try {
+			var args = ["-d", "-v", "threadtime"];
+			if (tag == "*")
+				args.push('*:$level');
+			else {
+				args.push('$tag:$level');
+				args.push("*:S");
+			}
 
-            return output;
-        } catch(e:Dynamic) {
-            return "Error trying to read logcat: " + e;
-        }
-        #else
-        return "Unknown";
-        #end
-    }
+			var process = new sys.io.Process("logcat", args);
+			var output = process.stdout.readAll().toString();
+			var errorOutput = process.stderr.readAll().toString();
+			process.close();
+
+			if (output.length == 0 && errorOutput.length > 0)
+				return "Error in logcat command: " + errorOutput;
+
+			return output;
+		} catch (e:Dynamic) {
+			return "Error trying to read logcat: " + e;
+		}
+		#else
+		return "Unknown";
+		#end
+	}
 }

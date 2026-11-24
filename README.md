@@ -52,6 +52,38 @@ Great, now you can use the library!
 | `androidmanager.provider.Settings` | Read system/secure/global settings and open settings screens |
 | `androidmanager.os.Build`, `androidmanager.os.Environment`, `androidmanager.content.Context`, `androidmanager.battery.Battery` | Build info, directories (with `getFilesDir`, `getObbDir`, `getCacheDir` and `getExternalFilesDir` like extension-androidtools), logcat and battery |
 
+## Java API
+
+android-manager ships its own Java API in the `androidmanager` package, so other Lime extensions or custom Java code can use it directly.
+
+```java
+import androidmanager.AndroidManager;
+import androidmanager.BuildInfo;
+import androidmanager.Tools;
+
+AndroidManager.addListener(new AndroidManager.Listener() {
+    @Override
+    public void onLifecycle(String state) {
+        AndroidManager.d("State: " + state);
+    }
+
+    @Override
+    public boolean onBackPressed() {
+        return false;
+    }
+});
+
+if (AndroidManager.isAtLeast(33) && !Tools.isChromebook())
+    Tools.makeToast(BuildInfo.getModel(), Tools.LENGTH_SHORT);
+```
+
+| Class | What it does |
+| --- | --- |
+| `AndroidManager` | Version, activity and context, UI thread and background helpers, logging, info JSON and `Listener` events |
+| `BuildInfo` | Every `Build` and `Build.VERSION` value with API level guards, plus `toJson()` |
+| `EnvironmentManager` | Standard directories and storage state, safe on every API level |
+| `Tools` | Device checks, window, launch, URL and toast helpers |
+
 ## Google Play Games
 
 Play Games Services v2 is optional. Enable it by setting your Play Games app ID before including the library:

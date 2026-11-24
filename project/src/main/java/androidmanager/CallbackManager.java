@@ -43,6 +43,11 @@ public class CallbackManager extends Extension {
         }
     }
 
+    private static void lifecycle(String state) {
+        AndroidManager.notifyLifecycle(state);
+        dispatch("onLifecycle", state);
+    }
+
     public static void dispatchActivityFailure(int requestCode, String message) {
         try {
             JSONObject json = new JSONObject();
@@ -58,6 +63,7 @@ public class CallbackManager extends Extension {
 
     @Override
     public boolean onActivityResult(int requestCode, int resultCode, Intent data) {
+        AndroidManager.notifyActivityResult(requestCode, resultCode, data);
         try {
             JSONObject json = new JSONObject();
             json.put("requestCode", requestCode);
@@ -72,6 +78,7 @@ public class CallbackManager extends Extension {
 
     @Override
     public boolean onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        AndroidManager.notifyPermissionsResult(requestCode, permissions, grantResults);
         try {
             JSONObject json = new JSONObject();
             JSONArray granted = new JSONArray();
@@ -103,59 +110,63 @@ public class CallbackManager extends Extension {
 
     @Override
     public boolean onBackPressed() {
+        boolean handled = AndroidManager.notifyBackPressed();
         dispatch("onBackPressed");
-        return !interceptBack;
+        return !interceptBack && !handled;
     }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        dispatch("onLifecycle", "create");
+        lifecycle("create");
     }
 
     @Override
     public void onStart() {
-        dispatch("onLifecycle", "start");
+        lifecycle("start");
     }
 
     @Override
     public void onRestart() {
-        dispatch("onLifecycle", "restart");
+        lifecycle("restart");
     }
 
     @Override
     public void onResume() {
         paused = false;
-        dispatch("onLifecycle", "resume");
+        lifecycle("resume");
     }
 
     @Override
     public void onPause() {
         paused = true;
-        dispatch("onLifecycle", "pause");
+        lifecycle("pause");
     }
 
     @Override
     public void onStop() {
-        dispatch("onLifecycle", "stop");
+        lifecycle("stop");
     }
 
     @Override
     public void onDestroy() {
-        dispatch("onLifecycle", "destroy");
+        lifecycle("destroy");
     }
 
     @Override
     public void onLowMemory() {
+        AndroidManager.notifyLowMemory();
         dispatch("onLowMemory");
     }
 
     @Override
     public void onTrimMemory(int level) {
+        AndroidManager.notifyTrimMemory(level);
         dispatch("onTrimMemory", level);
     }
 
     @Override
     public void onNewIntent(Intent intent) {
+        AndroidManager.notifyNewIntent(intent);
         dispatch("onNewIntent", Utils.intentToJson(intent).toString());
     }
 }

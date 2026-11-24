@@ -3,381 +3,221 @@ package androidmanager.os;
 #if android
 import androidmanager.jni.JNICache;
 #end
+import haxe.Json;
 
- /**
- * Information about the current build, extracted from system properties.
- * * @see https://developer.android.com/reference/android/os/Build
- */
 class Build {
-    
-    /**
-     * The end-user-visible name for the end product.
-     */
-    public static var MODEL(get, never):String;
+	static inline final CLASS:String = "androidmanager/BuildInfo";
 
-    /**
-     * The manufacturer of the product/hardware.
-     */
-    public static var MANUFACTURER(get, never):String;
+	public static var MODEL(get, never):String;
+	public static var MANUFACTURER(get, never):String;
+	public static var DEVICE(get, never):String;
+	public static var BOARD(get, never):String;
+	public static var BRAND(get, never):String;
+	public static var HARDWARE(get, never):String;
+	public static var DISPLAY(get, never):String;
+	public static var FINGERPRINT(get, never):String;
+	public static var PRODUCT(get, never):String;
+	public static var BOOTLOADER(get, never):String;
+	public static var ID(get, never):String;
+	public static var HOST(get, never):String;
+	public static var USER(get, never):String;
+	public static var TAGS(get, never):String;
+	public static var TYPE(get, never):String;
+	public static var SOC_MANUFACTURER(get, never):String;
+	public static var SOC_MODEL(get, never):String;
+	public static var TIME(get, never):Float;
+	public static var SUPPORTED_ABIS(get, never):Array<String>;
+	public static var IS_64_BIT(get, never):Bool;
 
-    /**
-     * The name of the industrial design.
-     */
-    public static var DEVICE(get, never):String;
+	public static function string(method:String):String {
+		#if android
+		var value:Null<String> = JNICache.call(CLASS, method, "()Ljava/lang/String;", [], null);
+		return value != null ? value : "Unknown";
+		#else
+		return "Unknown";
+		#end
+	}
 
-    /**
-     * The name of the underlying board, like "goldfish".
-     */
-    public static var BOARD(get, never):String;
+	public static function int(method:String):Int {
+		#if android
+		var value:Null<Int> = JNICache.call(CLASS, method, "()I", [], null);
+		return value != null ? value : 0;
+		#else
+		return 0;
+		#end
+	}
 
-    /**
-     * The consumer-visible brand with which the product/hardware will be associated, if any.
-     */
-    public static var BRAND(get, never):String;
+	public static function isAtLeast(sdk:Int):Bool
+		return VERSION.SDK_INT >= sdk;
 
-    /**
-     * The name of the hardware (from the kernel command line or /proc).
-     */
-    public static var HARDWARE(get, never):String;
+	public static function toJson():Dynamic {
+		#if android
+		var raw:Null<String> = JNICache.call(CLASS, "toJson", "()Ljava/lang/String;", [], null);
+		if (raw != null) {
+			try {
+				return Json.parse(raw);
+			} catch (e:Dynamic) {}
+		}
+		#end
+		return {};
+	}
 
-    /**
-     * A build ID string meant for displaying to the user.
-     */
-    public static var DISPLAY(get, never):String;
+	static function get_MODEL():String
+		return string("getModel");
 
-    /**
-     * A string that uniquely identifies this build. 
-     * Do not reuse across different builds.
-     */
-    public static var FINGERPRINT(get, never):String;
+	static function get_MANUFACTURER():String
+		return string("getManufacturer");
 
-    /**
-     * The name of the overall product.
-     */
-    public static var PRODUCT(get, never):String;
+	static function get_DEVICE():String
+		return string("getDevice");
 
-    /**
-     * The system bootloader version number.
-     */
-    public static var BOOTLOADER(get, never):String;
+	static function get_BOARD():String
+		return string("getBoard");
 
-    /**
-     * Either a changelist number, or a label like "M4-rc20".
-     */
-    public static var ID(get, never):String;
+	static function get_BRAND():String
+		return string("getBrand");
 
-    /**
-     * The name of the host machine where the build was compiled.
-     */
-    public static var HOST(get, never):String;
+	static function get_HARDWARE():String
+		return string("getHardware");
 
-    /**
-     * The name of the user who compiled the build.
-     */
-    public static var USER(get, never):String;
+	static function get_DISPLAY():String
+		return string("getDisplay");
 
-    /**
-     * Comma-separated tags describing the build, like "unsigned,debug".
-     */
-    public static var TAGS(get, never):String;
+	static function get_FINGERPRINT():String
+		return string("getFingerprint");
 
-    /**
-     * The type of build, like "user" or "eng".
-     */
-    public static var TYPE(get, never):String;
+	static function get_PRODUCT():String
+		return string("getProduct");
 
-    /**
-     * The time at which the build was produced, given in milliseconds since the UNIX epoch.
-     */
-    public static var TIME(get, never):Float;
+	static function get_BOOTLOADER():String
+		return string("getBootloader");
 
-    private static function get_MODEL():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'MODEL', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_ID():String
+		return string("getId");
 
-    private static function get_MANUFACTURER():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'MANUFACTURER', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_HOST():String
+		return string("getHost");
 
-    private static function get_DEVICE():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'DEVICE', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_USER():String
+		return string("getUser");
 
-    private static function get_BOARD():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'BOARD', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_TAGS():String
+		return string("getTags");
 
-    private static function get_BRAND():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'BRAND', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_TYPE():String
+		return string("getType");
 
-    private static function get_HARDWARE():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'HARDWARE', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_SOC_MANUFACTURER():String
+		return string("getSocManufacturer");
 
-    private static function get_DISPLAY():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'DISPLAY', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_SOC_MODEL():String
+		return string("getSocModel");
 
-    private static function get_FINGERPRINT():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'FINGERPRINT', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_TIME():Float {
+		#if android
+		var value:Null<Float> = JNICache.call(CLASS, "getTime", "()J", [], null);
+		return value != null ? value : 0.0;
+		#else
+		return 0.0;
+		#end
+	}
 
-    private static function get_PRODUCT():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'PRODUCT', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_SUPPORTED_ABIS():Array<String> {
+		var raw = string("getSupportedAbis");
+		try {
+			var parsed:Array<String> = Json.parse(raw);
+			return parsed != null ? parsed : [];
+		} catch (e:Dynamic) {
+			return [];
+		}
+	}
 
-    private static function get_BOOTLOADER():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'BOOTLOADER', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_ID():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'ID', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_HOST():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'HOST', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_USER():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'USER', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_TAGS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'TAGS', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_TYPE():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'TYPE', 'Ljava/lang/String;');
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_TIME():Float {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField('android/os/Build', 'TIME', 'J');
-        return field != null ? field.get() : 0.0;
-        #else
-        return 0.0;
-        #end
-    }
+	static function get_IS_64_BIT():Bool {
+		#if android
+		var value:Null<Bool> = JNICache.call(CLASS, "is64Bit", "()Z", [], null);
+		return value == true;
+		#else
+		return false;
+		#end
+	}
 }
-/**
- * Various version strings and numbers extracted from system properties.
- * * @see https://developer.android.com/reference/android/os/Build.VERSION
- */
+
 class VERSION {
-    
-    /**
-     * The base OS build the product is based on.
-     */
-    public static var BASE_OS(get, never):String;
+	public static var BASE_OS(get, never):String;
+	public static var RELEASE(get, never):String;
+	public static var SDK_INT(get, never):Int;
+	public static var PREVIEW_SDK_INT(get, never):Int;
+	public static var CODENAME(get, never):String;
+	public static var INCREMENTAL(get, never):String;
+	public static var SECURITY_PATCH(get, never):String;
+	public static var MEDIA_PERFORMANCE_CLASS(get, never):Int;
 
-    /**
-     * The user-visible version string (e.g., "15", "14", "13").
-     */
-    public static var RELEASE(get, never):String;
+	static var cachedSdk:Int = -1;
 
-    /**
-     * The SDK version of the software currently running on this hardware device.
-     */
-    public static var SDK_INT(get, never):Int;
+	static function get_BASE_OS():String
+		return Build.string("getBaseOs");
 
-     /**
-     * The current development codename, or the string "REL" if this is a release build.
-     */
-    public static var CODENAME(get, never):String;
+	static function get_RELEASE():String
+		return Build.string("getRelease");
 
-    /**
-     * The internal value used by the underlying source control to represent this build.
-     */
-    public static var INCREMENTAL(get, never):String;
+	static function get_SDK_INT():Int {
+		if (cachedSdk < 0)
+			cachedSdk = Build.int("getSdkInt");
+		return cachedSdk;
+	}
 
-    /**
-     * The user-visible security patch level (Requires API 23+).
-     */
-    public static var SECURITY_PATCH(get, never):String;
+	static function get_PREVIEW_SDK_INT():Int
+		return Build.int("getPreviewSdkInt");
 
-    /**
-     * The media performance class of the device (Requires API 31+).
-     */
-    public static var MEDIA_PERFORMANCE_CLASS(get, never):Int;
+	static function get_CODENAME():String
+		return Build.string("getCodename");
 
+	static function get_INCREMENTAL():String
+		return Build.string("getIncremental");
 
-    private static function get_CODENAME():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "CODENAME", "Ljava/lang/String;");
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_SECURITY_PATCH():String
+		return Build.string("getSecurityPatch");
 
-    private static function get_INCREMENTAL():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "INCREMENTAL", "Ljava/lang/String;");
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_SECURITY_PATCH():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "SECURITY_PATCH", "Ljava/lang/String;");
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_MEDIA_PERFORMANCE_CLASS():Int {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "MEDIA_PERFORMANCE_CLASS", "I");
-        return field != null ? field.get() : 0;
-        #else
-        return 0;
-        #end
-    }
-
-    private static function get_RELEASE():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "RELEASE", "Ljava/lang/String;");
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
-
-    private static function get_SDK_INT():Int {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "SDK_INT", "I");
-        return field != null ? field.get() : 0;
-        #else
-        return 0;
-        #end
-    }
-
-    private static function get_BASE_OS():String {
-        #if android
-        final field:Null<Dynamic> = JNICache.getStaticField("android/os/Build$VERSION", "BASE_OS", "Ljava/lang/String;");
-        return field != null ? field.get() : "Unknown";
-        #else
-        return "Unknown";
-        #end
-    }
+	static function get_MEDIA_PERFORMANCE_CLASS():Int
+		return Build.int("getMediaPerformanceClass");
 }
 
-/**
- * Provides access to the official Android SDK version codes.
- */
 class VERSION_CODES {
-    public static inline var BASE = 1;
-    public static inline var BASE_1_1 = 2;
-    public static inline var CUPCAKE = 3;
-    public static inline var DONUT = 4;
-    public static inline var ECLAIR = 5;
-    public static inline var ECLAIR_0_1 = 6;
-    public static inline var ECLAIR_MR1 = 7;
-    public static inline var FROYO = 8;
-    public static inline var GINGERBREAD = 9;
-    public static inline var GINGERBREAD_MR1 = 10;
-    public static inline var HONEYCOMB = 11;
-    public static inline var HONEYCOMB_MR1 = 12;
-    public static inline var HONEYCOMB_MR2 = 13;
-    public static inline var ICE_CREAM_SANDWICH = 14;
-    public static inline var ICE_CREAM_SANDWICH_MR1 = 15;
-    public static inline var JELLY_BEAN = 16;
-    public static inline var JELLY_BEAN_MR1 = 17;
-    public static inline var JELLY_BEAN_MR2 = 18;
-    public static inline var KITKAT = 19;
-    public static inline var KITKAT_WATCH = 20;
-    public static inline var LOLLIPOP = 21;
-    public static inline var LOLLIPOP_MR1 = 22;
-    public static inline var M = 23;
-    public static inline var N = 24;
-    public static inline var N_MR1 = 25;
-    public static inline var O = 26;
-    public static inline var O_MR1 = 27;
-    public static inline var P = 28;
-    public static inline var Q = 29;
-    public static inline var R = 30;
-    public static inline var S = 31;
-    public static inline var S_V2 = 32;
-    public static inline var TIRAMISU = 33;
-    public static inline var UPSIDE_DOWN_CAKE = 34;
-    public static inline var VANILLA_ICE_CREAM = 35;
+	public static inline var BASE = 1;
+	public static inline var BASE_1_1 = 2;
+	public static inline var CUPCAKE = 3;
+	public static inline var DONUT = 4;
+	public static inline var ECLAIR = 5;
+	public static inline var ECLAIR_0_1 = 6;
+	public static inline var ECLAIR_MR1 = 7;
+	public static inline var FROYO = 8;
+	public static inline var GINGERBREAD = 9;
+	public static inline var GINGERBREAD_MR1 = 10;
+	public static inline var HONEYCOMB = 11;
+	public static inline var HONEYCOMB_MR1 = 12;
+	public static inline var HONEYCOMB_MR2 = 13;
+	public static inline var ICE_CREAM_SANDWICH = 14;
+	public static inline var ICE_CREAM_SANDWICH_MR1 = 15;
+	public static inline var JELLY_BEAN = 16;
+	public static inline var JELLY_BEAN_MR1 = 17;
+	public static inline var JELLY_BEAN_MR2 = 18;
+	public static inline var KITKAT = 19;
+	public static inline var KITKAT_WATCH = 20;
+	public static inline var LOLLIPOP = 21;
+	public static inline var LOLLIPOP_MR1 = 22;
+	public static inline var M = 23;
+	public static inline var N = 24;
+	public static inline var N_MR1 = 25;
+	public static inline var O = 26;
+	public static inline var O_MR1 = 27;
+	public static inline var P = 28;
+	public static inline var Q = 29;
+	public static inline var R = 30;
+	public static inline var S = 31;
+	public static inline var S_V2 = 32;
+	public static inline var TIRAMISU = 33;
+	public static inline var UPSIDE_DOWN_CAKE = 34;
+	public static inline var VANILLA_ICE_CREAM = 35;
+	public static inline var BAKLAVA = 36;
+	public static inline var CUR_DEVELOPMENT = 10000;
 }
