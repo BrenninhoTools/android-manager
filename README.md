@@ -36,6 +36,8 @@ Great, now you can use the library!
 | `androidmanager.tools.Lifecycle` | `addOnExit`, `addOnResume`, `addOnDestroy` |
 | `androidmanager.os.Device` | Root/emulator/tablet/TV/Chromebook/DeX detection, memory, storage, display and thermal info |
 | `androidmanager.view.Window` | Secure mode, keep screen on, immersive, cutout, orientation, brightness, refresh rate |
+| `androidmanager.os.Tablet` | Form factor (phone, tablet, foldable, desktop, TV), window size classes, physical screen size, millimeter conversion, fold posture and hinge angle, change events |
+| `androidmanager.view.Input` | Touch timings and slop, unbuffered touch, input device list, physical keyboard, mouse, stylus and gamepad detection, hiding the mouse pointer |
 | `androidmanager.app.Application` | App info, open URLs, share, launch packages, custom intents, restart, exit |
 | `androidmanager.app.Notification` | Channels, notifications with progress, permission request |
 | `androidmanager.media.AudioManager` | Stream volume, audio focus events, headphones and output devices |
@@ -175,6 +177,26 @@ Window.captureScreen(Context.getExternalFilesDir() + "/screenshot.png", function
 ```
 
 Immersive mode is reapplied automatically when the window regains focus (`Window.autoReapplyImmersive`).
+
+## Tablets and foldables
+
+```haxe
+Tablet.onChange.add(function(info) layoutFor(info.widthClass, info.diagonalInches));
+Tablet.onPostureChange.add(function(posture, angle) if (posture == HALF_OPENED) useTabletopLayout());
+Tablet.onKeyboardChange.add(function(connected) showTouchControls(!connected));
+Tablet.startListening();
+
+if (Tablet.tablet || Tablet.isAtLeast(EXPANDED))
+	useWideLayout();
+
+var buttonSize = Tablet.millimetersToPixels(12);
+
+Input.setPointerVisible(false);
+for (device in Input.getExternalDevices())
+	showDevice(device.name, device.types);
+```
+
+`Tablet.formFactor` is one of `phone`, `tablet`, `foldable`, `desktop` (Chromebook, Samsung DeX and PC mode), `tv`, `watch` and `automotive`. Width classes follow the Material window size classes (`compact` under 600dp, `medium` under 840dp, `expanded` under 1200dp, `large` under 1600dp, `extra_large` above). `millimetersToPixels` uses the real panel density, so controls keep the same physical size on phones and tablets. Posture and hinge angle need a foldable with a hinge sensor (Android 11+), and the events fire on fold, unfold, multi-window resize, rotation and keyboard changes.
 
 ## Audio
 

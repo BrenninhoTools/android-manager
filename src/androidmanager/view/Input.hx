@@ -14,6 +14,19 @@ enum abstract InputSource(Int) from Int to Int {
 	var TOUCHPAD = 0x00100008;
 }
 
+typedef InputDeviceInfo = {
+	var id:Int;
+	var name:String;
+	var vendorId:Int;
+	var productId:Int;
+	var sources:Int;
+	var types:Array<String>;
+	var virtual:Bool;
+	var external:Bool;
+	var alphabeticKeyboard:Bool;
+	var vibrator:Bool;
+}
+
 class Input {
 	private static inline final CLASS:String = "androidmanager/InputTools";
 
@@ -27,6 +40,7 @@ class Input {
 	public static var density(get, never):Float;
 	public static var maxTouchPoints(get, never):Int;
 	public static var hapticFeedbackEnabled(get, never):Bool;
+	public static var physicalKeyboard(get, never):Bool;
 
 	public static function requestUnbufferedDispatch(enable:Bool = true):Bool
 		return invoke("requestUnbufferedDispatch", "(Z)Z", [enable], false);
@@ -45,6 +59,22 @@ class Input {
 
 	public static function hasKeyboard():Bool
 		return hasSource(KEYBOARD);
+
+	public static function setPointerVisible(visible:Bool):Bool
+		return invoke("setPointerVisible", "(Z)Z", [visible], false);
+
+	public static function getInputDevices():Array<InputDeviceInfo> {
+		final content:Null<String> = invoke("getInputDevices", "()Ljava/lang/String;", [], "[]");
+		try {
+			final result:Array<InputDeviceInfo> = haxe.Json.parse(content != null ? content : "[]");
+			return result != null ? result : [];
+		} catch (e:Dynamic) {
+			return [];
+		}
+	}
+
+	public static function getExternalDevices():Array<InputDeviceInfo>
+		return [for (device in getInputDevices()) if (device.external && !device.virtual) device];
 
 	public static function dpToPixels(dp:Float):Float
 		return dp * density;
@@ -78,6 +108,9 @@ class Input {
 
 	private static function get_maxTouchPoints():Int
 		return invoke("getMaxTouchPoints", "()I", [], 1);
+
+	private static function get_physicalKeyboard():Bool
+		return invoke("isPhysicalKeyboardConnected", "()Z", [], false);
 
 	private static function get_hapticFeedbackEnabled():Bool
 		return invoke("isHapticFeedbackEnabled", "()Z", [], true);

@@ -1,6 +1,16 @@
 Changelog
 =========
 
+1.6.0 (??/??/2026)
+------------------
+
+- Added `os.Tablet` with form factor detection (phone, tablet, foldable, desktop, TV, watch, automotive), Material window size classes, real screen size in inches, density and window bounds
+- `Tablet.millimetersToPixels` and `pixelsToMillimeters` use the real panel density for controls with the same physical size on every screen
+- Foldables: hinge angle and posture (`closed`, `half_opened`, `flat`) with `onPostureChange`
+- `Tablet.startListening` reports fold, unfold, multi-window, rotation and keyboard changes through `onChange`, `onFormFactorChange`, `onSizeClassChange` and `onKeyboardChange`
+- `Input` gained `physicalKeyboard`, `setPointerVisible`, `getInputDevices` and `getExternalDevices`
+- `Tools.isFoldable`
+
 1.5.0 (??/??/2026)
 ------------------
 

@@ -14,6 +14,9 @@ class Tools {
 	public static function isTablet():Bool
 		return Device.tablet;
 
+	public static function isFoldable():Bool
+		return androidmanager.os.Tablet.foldable;
+
 	public static function isAndroidTV():Bool
 		return Device.androidTV;
 

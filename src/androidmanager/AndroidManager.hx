@@ -14,7 +14,7 @@ enum abstract LogPriority(Int) to Int {
 }
 
 class AndroidManager {
-	public static inline final VERSION:String = "1.5.0";
+	public static inline final VERSION:String = "1.6.0";
 
 	static inline final CLASS:String = "androidmanager/AndroidManager";
 
