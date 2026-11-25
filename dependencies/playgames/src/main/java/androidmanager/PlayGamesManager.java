@@ -723,8 +723,13 @@ public class PlayGamesManager extends Extension {
             public void run() {
                 try {
                     View view = Extension.mainView != null ? Extension.mainView : act.getWindow().getDecorView();
-                    PlayGames.getGamesClient(act).setViewForPopups(view);
-                    PlayGames.getGamesClient(act).setGravityForPopups(gravity);
+                    Object client = PlayGames.class.getMethod("getGamesClient", Activity.class).invoke(null, act);
+                    if (client != null) {
+                        client.getClass().getMethod("setViewForPopups", View.class).invoke(client, view);
+                        client.getClass().getMethod("setGravityForPopups", int.class).invoke(client, gravity);
+                    }
+                } catch (NoSuchMethodException e) {
+                    Log.i(TAG, "Popup gravity is handled by Play Games on this SDK version");
                 } catch (Exception e) {
                     Log.e(TAG, e.toString());
                 }
@@ -819,7 +824,7 @@ public class PlayGamesManager extends Extension {
     private static JSONObject metadataToJson(SnapshotMetadata metadata) throws Exception {
         JSONObject json = new JSONObject();
         json.put("name", metadata.getUniqueName());
-        json.put("title", metadata.getTitle() != null ? metadata.getTitle() : "");
+        json.put("title", metadata.getUniqueName() != null ? metadata.getUniqueName() : "");
         json.put("description", metadata.getDescription() != null ? metadata.getDescription() : "");
         json.put("lastModified", (double) metadata.getLastModifiedTimestamp());
         json.put("playedTime", (double) metadata.getPlayedTime());
